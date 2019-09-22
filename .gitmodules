@@ -1,0 +1,3 @@
+[submodule "Externals/DUnitX"]
+	path = Externals/DUnitX
+	url = https://github.com/henriquewerlang/DUnitX.git
