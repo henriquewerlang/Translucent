@@ -12,7 +12,9 @@ type
     procedure WhenRegisterAProcedureHaveToCallTheProcedureRegistred;
   end;
 
+{$M+}
   ITestInterface = interface
+    ['{AE7C4FC6-1583-4BE4-B00F-E905CA981377}']
     procedure TestProcedute;
   end;
 
