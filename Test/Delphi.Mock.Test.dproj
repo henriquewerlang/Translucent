@@ -102,6 +102,7 @@
         <DCCReference Include="Delphi.Mock.Setup.Tests.pas"/>
         <DCCReference Include="..\Delphi.Mock.VirtualInterface.pas"/>
         <DCCReference Include="Delphi.Mock.VirtualInterface.Test.pas"/>
+        <DCCReference Include="..\Delphi.Mock.Method.Types.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

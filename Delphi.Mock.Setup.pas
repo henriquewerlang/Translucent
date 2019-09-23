@@ -7,13 +7,13 @@ uses System.Rtti, System.Generics.Collections, Delphi.Mock, Delphi.Mock.VirtualI
 type
   TMockSetupInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>)
   private
-    FMock: IMock<T>;
+    FMethodRegister: IMethodRegister;
 
     function When: T;
 
     procedure OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
   public
-    constructor Create(Mock: IMock<T>); reintroduce;
+    constructor Create(MethodRegister: IMethodRegister; Method: IMethodInfo);
   end;
 
 implementation
@@ -22,14 +22,16 @@ uses System.TypInfo;
 
 { TMockSetupInterface<T> }
 
-constructor TMockSetupInterface<T>.Create;
+constructor TMockSetupInterface<T>.Create(MethodRegister: IMethodRegister; Method: IMethodInfo);
 begin
   inherited Create(TypeInfo(T), OnInvoke);
+
+  FMethodRegister := MethodRegister;
 end;
 
 procedure TMockSetupInterface<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 begin
-//  RegistredMethods.Add('', nil);
+  FMethodRegister.RegisterMethod(Method, nil);
 end;
 
 function TMockSetupInterface<T>.When: T;
@@ -38,3 +40,4 @@ begin
 end;
 
 end.
+

@@ -28,18 +28,19 @@ uses Delphi.Mock, Delphi.Mock.Setup;
 
 procedure TMockSetupInterfaceTest.HeveToReturnTheInterfaceWhenTheWhenIsCalled;
 begin
-  var Setup := TMockSetupInterface<ITestInterface>.Create(nil) as IMockSetup<ITestInterface>;
+  var Setup := TMockSetupInterface<ITestInterface>.Create(nil, nil) as IMockSetup<ITestInterface>;
 
   Assert.IsNotNull(Setup.When, 'Have to return the interface!');
 end;
 
 procedure TMockSetupInterfaceTest.WhenRegisterAProcedureHaveToAddItToTheList;
 begin
-  var Setup := TMockSetupInterface<ITestInterface>.Create(nil);
+  var Mock := TMockInterface<ITestInterface>.Create;
+  var Setup := TMockSetupInterface<ITestInterface>.Create(Mock, nil);
 
   (Setup as IMockSetup<ITestInterface>).When.Test;
 
-  Assert.AreEqual(1, Setup.RegistredMethods.Count);
+  Assert.AreEqual(1, Mock.RegistredMethods.Count);
 end;
 
 initialization

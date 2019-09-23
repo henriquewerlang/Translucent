@@ -9,7 +9,7 @@ type
   TMockInterfaceTest = class
   public
     [Test]
-    procedure WhenRegisterAProcedureHaveToCallTheProcedureRegistred;
+    procedure WhenCallWillExecuteProcedureHaveToReturnASetupInterface;
   end;
 
 {$M+}
@@ -24,18 +24,12 @@ uses Delphi.Mock;
 
 { TMockInterfaceTest }
 
-procedure TMockInterfaceTest.WhenRegisterAProcedureHaveToCallTheProcedureRegistred;
+procedure TMockInterfaceTest.WhenCallWillExecuteProcedureHaveToReturnASetupInterface;
 begin
-  var Executed := False;
   var Mock := TMock.Create<ITestInterface>;
+  var Setup := Mock.WillExecute(nil);
 
-  Mock.WillExecute(
-    procedure
-    begin
-      Executed := True;
-    end).When.TestProcedute;
-
-  Assert.IsTrue(Executed, 'The procedure wasn''t called!');
+  Assert.IsNotNull(Setup);
 end;
 
 initialization
