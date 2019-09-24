@@ -8,10 +8,12 @@ type
   EMethodNotRegistred = class(Exception);
 
   IIt = interface
+    ['{5B034A6E-3953-4A0A-9A3A-6805210E082E}']
     function Compare(const Value: TValue): Boolean;
   end;
 
   IMethodInfo = interface
+    ['{047238B7-4FEB-4D99-A7B9-108F1627F298}']
     function GetItParams: TArray<IIt>;
 
     procedure Execute(out Result: TValue);
@@ -21,14 +23,23 @@ type
   end;
 
   IMethodRegister = interface
+    ['{7F5EAD8F-550C-422F-ACF6-2D3C19097748}']
     procedure RegisterMethod(Method: TRttiMethod; Info: IMethodInfo);
   end;
 
   IMockSetup<T> = interface
+    ['{778531BB-4093-4103-B4BC-72845B78387B}']
     function When: T;
   end;
 
+  IMockExpect<T> = interface
+    ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
+    function Once: IMockSetup<T>;
+  end;
+
   IMock<T> = interface
+    ['{C249D074-74A0-4AB9-BA7D-102CA4811019}']
+    function Expect: IMockExpect<T>;
     function Instance: T;
     function WillExecute(Proc: TProc): IMockSetup<T>;
     function WillReturn(const Value: TValue): IMockSetup<T>;
@@ -52,6 +63,7 @@ type
 
     destructor Destroy; override;
 
+    function Expect: IMockExpect<T>;
     function Instance: T;
     function WillExecute(Proc: TProc): IMockSetup<T>;
     function WillReturn(const Value: TValue): IMockSetup<T>;
@@ -69,7 +81,6 @@ type
     function CompareEqualValue(const Value: TValue): Boolean;
   public
     function Compare(const Value: TValue): Boolean;
-
     function IsAny<T>: T;
     function IsEqualTo<T>(const Value: T): T;
     function IsNotEqualTo<T>(const Value: T): T;
@@ -82,7 +93,7 @@ var
 
 implementation
 
-uses System.TypInfo, Delphi.Mock.Setup, Delphi.Mock.Method.Types;
+uses System.TypInfo, Delphi.Mock.Setup, Delphi.Mock.Method.Types, Delphi.Mock.Expect;
 
 function It: TIt;
 begin
@@ -110,6 +121,11 @@ begin
   FRegistredMethods.Free;
 
   inherited;
+end;
+
+function TMockInterface<T>.Expect: IMockExpect<T>;
+begin
+  Result := TMockExpectInteface<T>.Create(Self);
 end;
 
 function TMockInterface<T>.FindMethod(Method: TRttiMethod; const Args: TArray<TValue>): IMethodInfo;

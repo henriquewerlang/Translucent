@@ -144,6 +144,8 @@ procedure TMockInterfaceTest.WhenTheMethodHaveNoRegisterMustRaiseAError;
 begin
   var Mock := TMockInterface<ITestInterface>.Create;
 
+  var Test := Mock.Instance;
+
   Assert.WillRaise(
     procedure
     begin

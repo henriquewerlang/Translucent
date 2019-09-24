@@ -34,6 +34,16 @@ type
     procedure Execute(out Result: TValue);
   end;
 
+  TMethodInfoExpect = class(TMethodInfo, IMethodInfo)
+  private
+    FCount: Integer;
+    FMaxCount: Integer;
+  public
+    constructor Create(MaxCount: Integer);
+
+    procedure Execute(out Result: TValue);
+  end;
+
 implementation
 
 { TMethodInfoWillExecute }
@@ -84,5 +94,16 @@ begin
   Result := FReturnValue;
 end;
 
-end.
+{ TMethodInfoExpect }
 
+constructor TMethodInfoExpect.Create(MaxCount: Integer);
+begin
+  inherited Create;
+end;
+
+procedure TMethodInfoExpect.Execute(out Result: TValue);
+begin
+  Inc(FCount);
+end;
+
+end.

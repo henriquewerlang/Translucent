@@ -18,7 +18,9 @@ uses
   Delphi.Mock.Setup.Tests in 'Delphi.Mock.Setup.Tests.pas',
   Delphi.Mock.VirtualInterface in '..\Delphi.Mock.VirtualInterface.pas',
   Delphi.Mock.VirtualInterface.Test in 'Delphi.Mock.VirtualInterface.Test.pas',
-  Delphi.Mock.Method.Types in '..\Delphi.Mock.Method.Types.pas';
+  Delphi.Mock.Method.Types in '..\Delphi.Mock.Method.Types.pas',
+  Delphi.Mock.Expect in '..\Delphi.Mock.Expect.pas',
+  Delphi.Mock.Expect.Test in 'Delphi.Mock.Expect.Test.pas';
 
 //Just to not remove de IFDEF
 {$IFNDEF TESTINSIGHT}
