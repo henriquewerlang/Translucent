@@ -2,18 +2,22 @@ unit Delphi.Mock.Setup;
 
 interface
 
-uses System.Rtti, System.Generics.Collections, Delphi.Mock, Delphi.Mock.VirtualInterface;
+uses System.Rtti, System.SysUtils, System.Generics.Collections, Delphi.Mock, Delphi.Mock.VirtualInterface;
 
 type
+  ENoParamsDefined = class(Exception);
+  EParamsLengthDiffer = class(Exception);
+
   TMockSetupInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>)
   private
+    FMethod: IMethodInfo;
     FMethodRegister: IMethodRegister;
-
-    function When: T;
 
     procedure OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
   public
     constructor Create(MethodRegister: IMethodRegister; Method: IMethodInfo);
+
+    function When: T;
   end;
 
 implementation
@@ -26,12 +30,23 @@ constructor TMockSetupInterface<T>.Create(MethodRegister: IMethodRegister; Metho
 begin
   inherited Create(TypeInfo(T), OnInvoke);
 
+  FMethod := Method;
   FMethodRegister := MethodRegister;
 end;
 
 procedure TMockSetupInterface<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 begin
-  FMethodRegister.RegisterMethod(Method, nil);
+  var LengthArg := Pred(Length(Args));
+
+  if LengthArg > 0 then
+    if Length(GItParams) = 0 then
+      raise ENoParamsDefined.Create('You have to use de "It" function to register params to execution!')
+    else if Length(GItParams) <> LengthArg then
+      raise EParamsLengthDiffer.Create('The length of params and it params, must be the same!');
+
+  FMethodRegister.RegisterMethod(Method, FMethod);
+
+  FMethod.FillItParams;
 end;
 
 function TMockSetupInterface<T>.When: T;
