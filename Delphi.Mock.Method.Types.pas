@@ -37,7 +37,6 @@ type
   TMethodInfoExpect = class(TMethodInfo, IMethodInfo)
   private
     FCount: Integer;
-    FMaxCount: Integer;
   public
     constructor Create(MaxCount: Integer);
 
