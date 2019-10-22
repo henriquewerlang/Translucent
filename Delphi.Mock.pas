@@ -5,6 +5,7 @@ interface
 uses System.Rtti, System.SysUtils, System.Generics.Collections, Delphi.Mock.VirtualInterface;
 
 type
+  EExpectationsNotConfigured = class(Exception);
   EMethodNotRegistred = class(Exception);
 
   IIt = interface
@@ -24,6 +25,8 @@ type
 
   IMethodRegister = interface
     ['{7F5EAD8F-550C-422F-ACF6-2D3C19097748}']
+    function GetMethods: TArray<IMethodInfo>;
+
     procedure RegisterMethod(Method: TRttiMethod; Info: IMethodInfo);
   end;
 
@@ -32,14 +35,20 @@ type
     function When: T;
   end;
 
-  IMockExpect<T> = interface
+  IMockExpect = interface
+    ['{D8C9262E-8412-4464-97AC-C01ABF3B8991}']
+    function CheckExpectations: String;
+  end;
+
+  IMockExpectSetup<T> = interface
     ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
     function Once: IMockSetup<T>;
   end;
 
   IMock<T> = interface
     ['{C249D074-74A0-4AB9-BA7D-102CA4811019}']
-    function Expect: IMockExpect<T>;
+    function CheckExpectations: String;
+    function Expect: IMockExpectSetup<T>;
     function Instance: T;
     function WillExecute(Proc: TProc): IMockSetup<T>;
     function WillReturn(const Value: TValue): IMockSetup<T>;
@@ -52,8 +61,10 @@ type
   TMockInterface<T: IInterface> = class(TVirtualInterfaceEx, IMock<T>, IMethodRegister)
   private
     FRegistredMethods: TDictionary<TRttiMethod, TArray<IMethodInfo>>;
+    FExpectations: IMockExpect;
 
     function CreateMockSetup(MethodInfo: IMethodInfo): IMockSetup<T>;
+    function GetMethods: TArray<IMethodInfo>;
     function FindMethod(Method: TRttiMethod; const Args: TArray<TValue>): IMethodInfo;
 
     procedure OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
@@ -63,7 +74,8 @@ type
 
     destructor Destroy; override;
 
-    function Expect: IMockExpect<T>;
+    function CheckExpectations: String;
+    function Expect: IMockExpectSetup<T>;
     function Instance: T;
     function WillExecute(Proc: TProc): IMockSetup<T>;
     function WillReturn(const Value: TValue): IMockSetup<T>;
@@ -104,6 +116,18 @@ end;
 
 { TMockInterface<T> }
 
+function TMockInterface<T>.CheckExpectations: String;
+begin
+  if Assigned(FExpectations) then
+  begin
+    Result := FExpectations.CheckExpectations;
+
+    FExpectations := nil;
+  end
+  else
+    raise EExpectationsNotConfigured.Create('Expectations not configured');
+end;
+
 constructor TMockInterface<T>.Create;
 begin
   inherited Create(TypeInfo(T), OnInvoke);
@@ -123,9 +147,11 @@ begin
   inherited;
 end;
 
-function TMockInterface<T>.Expect: IMockExpect<T>;
+function TMockInterface<T>.Expect: IMockExpectSetup<T>;
 begin
   Result := TMockExpectInteface<T>.Create(Self);
+
+  FExpectations := Result as IMockExpect;
 end;
 
 function TMockInterface<T>.FindMethod(Method: TRttiMethod; const Args: TArray<TValue>): IMethodInfo;
@@ -146,6 +172,13 @@ begin
     if Assigned(Result) then
       Exit;
   end;
+end;
+
+function TMockInterface<T>.GetMethods: TArray<IMethodInfo>;
+begin
+  Result := nil;
+  for var Methodos in FRegistredMethods.Values do
+    Result := Result + Methodos;
 end;
 
 function TMockInterface<T>.Instance: T;

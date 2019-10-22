@@ -5,6 +5,11 @@ interface
 uses System.SysUtils, System.Rtti, Delphi.Mock;
 
 type
+  IMethodExpect = interface
+    ['{01FB3CF2-C990-4078-AF97-C9E3F4CD9B44}']
+    function CheckExpectation: String;
+  end;
+
   TMethodInfo = class(TInterfacedObject)
   private
     FItParams: TArray<IIt>;
@@ -34,13 +39,16 @@ type
     procedure Execute(out Result: TValue);
   end;
 
-  TMethodInfoExpect = class(TMethodInfo, IMethodInfo)
+  TMethodInfoCounter = class(TMethodInfo, IMethodInfo)
   private
-    FCount: Integer;
+    FExecutionCount: Integer;
   public
-    constructor Create(MaxCount: Integer);
-
     procedure Execute(out Result: TValue);
+  end;
+
+  TMethodInfoExpectOnce = class(TMethodInfoCounter, IMethodExpect)
+  public
+    function CheckExpectation: String;
   end;
 
 implementation
@@ -93,16 +101,25 @@ begin
   Result := FReturnValue;
 end;
 
-{ TMethodInfoExpect }
+{ TMethodInfoCounter }
 
-constructor TMethodInfoExpect.Create(MaxCount: Integer);
+procedure TMethodInfoCounter.Execute(out Result: TValue);
 begin
-  inherited Create;
+  inherited;
+
+  Inc(FExecutionCount);
 end;
 
-procedure TMethodInfoExpect.Execute(out Result: TValue);
+{ TMethodInfoExpectOnce }
+
+function TMethodInfoExpectOnce.CheckExpectation: String;
 begin
-  Inc(FCount);
+  Result := EmptyStr;
+
+  if FExecutionCount = 0 then
+    Result := 'Expected to call once the method but never called'
+  else if FExecutionCount > 1 then
+    Result := 'Expected to call once the method but was called 5 times';
 end;
 
 end.

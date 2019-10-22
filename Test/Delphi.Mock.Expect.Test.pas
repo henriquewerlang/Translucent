@@ -9,9 +9,23 @@ type
   TMockExpectTest = class
   public
     [Test]
-    procedure WhenExecuteAExpectationMustIncreaseTheCounterOfMethod;
+    procedure WhenToCallExpectationsAndHasNotBeenInitializedHaveToRaiseAnError;
+    [Test]
+    procedure WhenTheExpectationsAreSetAndNoneAreCalledHaveToReturnATextWithTheExpectations;
   end;
 
+  [TestFixture]
+  TMethodInfoExpectOnceTest = class
+  public
+    [Test]
+    procedure WhenNeverCallTheFunctionHasToReturnTheTextOfNeverHavingCalled;
+    [Test]
+    procedure WhenCallingMoreThanOnceTheMethodHasToShowTheMessageWithTheAmount;
+    [Test]
+    procedure WhenCallingOnlyOnceCanNotReturnValue;
+  end;
+
+{$M+}
   ITestExpectation = interface
     ['{48BCC9B1-D284-4FEC-831A-D6B0495AC51F}']
     procedure ExpectMethod;
@@ -19,24 +33,75 @@ type
 
 implementation
 
+uses System.Rtti, Delphi.Mock, Delphi.Mock.Method.Types;
+
 { TMockExpectTest }
 
-uses Delphi.Mock;
-
-procedure TMockExpectTest.WhenExecuteAExpectationMustIncreaseTheCounterOfMethod;
+procedure TMockExpectTest.WhenTheExpectationsAreSetAndNoneAreCalledHaveToReturnATextWithTheExpectations;
 begin
   var Mock := TMock.Create<ITestExpectation>;
 
   Mock.Expect.Once.When.ExpectMethod;
 
-  Mock.Instance.ExpectMethod;
+  Assert.IsNotEmpty(Mock.CheckExpectations);
+end;
 
-  Mock.Instance.ExpectMethod;
+procedure TMockExpectTest.WhenToCallExpectationsAndHasNotBeenInitializedHaveToRaiseAnError;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      var Mock := TMock.Create<ITestExpectation>;
 
-  Assert.AreEqual(2, 0, 'Have to continue from here, and I don''t know how...');
+      Mock.CheckExpectations;
+    end, EExpectationsNotConfigured);
+end;
+
+{ TMethodInfoExpectOnceTest }
+
+procedure TMethodInfoExpectOnceTest.WhenCallingMoreThanOnceTheMethodHasToShowTheMessageWithTheAmount;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+  var Value: TValue;
+
+  Method.Execute(Value);
+
+  Method.Execute(Value);
+
+  Method.Execute(Value);
+
+  Method.Execute(Value);
+
+  Method.Execute(Value);
+
+  Assert.AreEqual('Expected to call once the method but was called 5 times', Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodInfoExpectOnceTest.WhenCallingOnlyOnceCanNotReturnValue;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+  var Value: TValue;
+
+  Method.Execute(Value);
+
+  Assert.IsEmpty(Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodInfoExpectOnceTest.WhenNeverCallTheFunctionHasToReturnTheTextOfNeverHavingCalled;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+
+  Assert.AreEqual('Expected to call once the method but never called', Method.CheckExpectation);
+
+  Method.Free;
 end;
 
 initialization
   TDUnitX.RegisterTestFixture(TMockExpectTest);
 
 end.
+
