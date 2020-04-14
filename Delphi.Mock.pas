@@ -90,9 +90,9 @@ type
     FItCompare: TItCompare;
     FValueToCompare: TValue;
 
+    function Compare(const Value: TValue): Boolean;
     function CompareEqualValue(const Value: TValue): Boolean;
   public
-    function Compare(const Value: TValue): Boolean;
     function IsAny<T>: T;
     function IsEqualTo<T>(const Value: T): T;
     function IsNotEqualTo<T>(const Value: T): T;
@@ -100,7 +100,7 @@ type
 
 function It: TIt;
 
-var
+threadvar
   GItParams: TArray<IIt>;
 
 implementation

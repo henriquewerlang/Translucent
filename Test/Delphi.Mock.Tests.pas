@@ -186,7 +186,7 @@ begin
 
   ValueIt.IsEqualTo(123);
 
-  Assert.AreEqual(Comparision, ValueIt.Compare(Value));
+  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
 end;
 
 procedure TItTest.ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
@@ -195,7 +195,7 @@ begin
 
   ValueIt.IsNotEqualTo(123);
 
-  Assert.AreEqual(Comparision, ValueIt.Compare(Value));
+  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
 end;
 
 procedure TItTest.WhenIsAnyIsCreateAlwaysReturnTrue;
@@ -204,7 +204,7 @@ begin
 
   ValueIt.IsAny<String>;
 
-  Assert.IsTrue(ValueIt.Compare(EmptyStr));
+  Assert.IsTrue((ValueIt as IIt).Compare(EmptyStr));
 end;
 
 initialization
