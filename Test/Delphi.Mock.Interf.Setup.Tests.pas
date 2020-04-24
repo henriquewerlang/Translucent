@@ -34,7 +34,7 @@ type
 
 implementation
 
-uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Interf.Setup, Delphi.Mock.Method.Types;
+uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Interf, Delphi.Mock.Interf.Setup, Delphi.Mock.Method.Types;
 
 { TMockSetupInterfaceTest }
 
