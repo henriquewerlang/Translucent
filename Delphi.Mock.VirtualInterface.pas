@@ -23,7 +23,7 @@ begin
   var Context := TRttiContext.Create;
   var InterfaceType := Context.GetType(PIID) as TRttiInterfaceType;
 
-  if InterfaceType.GUID = TGUID.Empty then
+  if not (ifHasGuid in InterfaceType.IntfFlags) then
     raise EInterfaceWithoutGUID.Create('Interface without a GUID, please check interface declaration!')
   else if Length(InterfaceType.GetMethods) = 0 then
     raise EInterfaceWithoutMethodInfo.Create('You have to enable "Emit runtime type information" or put a {$M+} in the unit of inteface!');
