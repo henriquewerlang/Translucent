@@ -1,4 +1,4 @@
-unit Delphi.Mock.Setup.Tests;
+unit Delphi.Mock.Interf.Setup.Tests;
 
 interface
 
@@ -34,7 +34,7 @@ type
 
 implementation
 
-uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Setup, Delphi.Mock.Method.Types;
+uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Interf.Setup, Delphi.Mock.Method.Types;
 
 { TMockSetupInterfaceTest }
 
@@ -59,7 +59,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      var Mock := TMock.Create<ITestInterface>;
+      var Mock := TMock.CreateInterface<ITestInterface>;
 
       Mock.WillExecute(nil).When.ProcedureWithParam(It.IsAny<Integer>, EmptyStr);
     end, EParamsLengthDiffer);
@@ -70,7 +70,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      var Mock := TMock.Create<ITestInterface>;
+      var Mock := TMock.CreateInterface<ITestInterface>;
 
       Mock.WillExecute(nil).When.ProcedureWithParam(It.IsAny<Integer>, It.IsAny<String>);
 
@@ -93,7 +93,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      var Mock := TMock.Create<ITestInterface>;
+      var Mock := TMock.CreateInterface<ITestInterface>;
 
       Mock.WillExecute(nil).When.ProcedureWithParam(0, EmptyStr);
     end, ENoParamsDefined);

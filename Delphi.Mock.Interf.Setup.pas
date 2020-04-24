@@ -1,4 +1,4 @@
-unit Delphi.Mock.Setup;
+unit Delphi.Mock.Interf.Setup;
 
 interface
 

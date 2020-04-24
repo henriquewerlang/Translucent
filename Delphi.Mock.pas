@@ -55,7 +55,8 @@ type
   end;
 
   TMock = class
-    class function Create<T: IInterface>: IMock<T>;
+    class function CreateClass<T: class>: IMock<T>;
+    class function CreateInterface<T: IInterface>: IMock<T>;
   end;
 
   TMockInterface<T: IInterface> = class(TVirtualInterfaceEx, IMock<T>, IMethodRegister)
@@ -83,6 +84,17 @@ type
     property RegistredMethods: TDictionary<TRttiMethod, TArray<IMethodInfo>> read FRegistredMethods write FRegistredMethods;
   end;
 
+  TMockClass<T: class> = class(TInterfacedObject, IMock<T>)
+  public
+    constructor Create; reintroduce;
+
+    function CheckExpectations: String;
+    function Expect: IMockExpectSetup<T>;
+    function Instance: T;
+    function WillExecute(Proc: TProc): IMockSetup<T>;
+    function WillReturn(const Value: TValue): IMockSetup<T>;
+  end;
+
   TIt = class(TInterfacedObject, IIt)
   private type
     TItCompare = (NotDefined, Any, EqualTo, NotEqualTo);
@@ -100,12 +112,12 @@ type
 
 function It: TIt;
 
-threadvar
+var
   GItParams: TArray<IIt>;
 
 implementation
 
-uses System.TypInfo, Delphi.Mock.Setup, Delphi.Mock.Method.Types, Delphi.Mock.Expect;
+uses System.TypInfo, Delphi.Mock.Interf.Setup, Delphi.Mock.Method.Types, Delphi.Mock.Interf.Expect;
 
 function It: TIt;
 begin
@@ -211,7 +223,12 @@ end;
 
 { TMock }
 
-class function TMock.Create<T>: IMock<T>;
+class function TMock.CreateClass<T>: IMock<T>;
+begin
+  Result := TMockClass<T>.Create;
+end;
+
+class function TMock.CreateInterface<T>: IMock<T>;
 begin
   Result := TMockInterface<T>.Create;
 end;
@@ -252,6 +269,40 @@ begin
   FItCompare := NotEqualTo;
   FValueToCompare := TValue.From(Value);
   Result := Value;
+end;
+
+{ TMockClass<T> }
+
+function TMockClass<T>.CheckExpectations: String;
+begin
+
+end;
+
+constructor TMockClass<T>.Create;
+begin
+  inherited Create;
+
+  TVirtualMethodInterceptor.Create(T);
+end;
+
+function TMockClass<T>.Expect: IMockExpectSetup<T>;
+begin
+
+end;
+
+function TMockClass<T>.Instance: T;
+begin
+
+end;
+
+function TMockClass<T>.WillExecute(Proc: TProc): IMockSetup<T>;
+begin
+
+end;
+
+function TMockClass<T>.WillReturn(const Value: TValue): IMockSetup<T>;
+begin
+
 end;
 
 end.
