@@ -21,7 +21,8 @@ uses
   Delphi.Mock.Method.Types in '..\Delphi.Mock.Method.Types.pas',
   Delphi.Mock.Interf.Expect in '..\Delphi.Mock.Interf.Expect.pas',
   Delphi.Mock.Interf.Expect.Test in 'Delphi.Mock.Interf.Expect.Test.pas',
-  Delphi.Mock.Classs.Test in 'Delphi.Mock.Classs.Test.pas';
+  Delphi.Mock.Classs.Test in 'Delphi.Mock.Classs.Test.pas',
+  Delphi.Mock.It.Test in 'Delphi.Mock.It.Test.pas';
 
 //Just to not remove de IFDEF
 {$IFNDEF TESTINSIGHT}

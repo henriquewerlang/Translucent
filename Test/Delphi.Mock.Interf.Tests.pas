@@ -26,19 +26,6 @@ type
     procedure WhenTheMethodHaveNoRegisterMustRaiseAError;
   end;
 
-  [TestFixture]
-  TItTest = class
-  public
-    [Test]
-    procedure WhenIsAnyIsCreateAlwaysReturnTrue;
-    [TestCase('EqualValue', '123,True')]
-    [TestCase('DiferentValue', '456,False')]
-    procedure ComparingEqualValueOnlyReturnTrueWhenIsEqual(Value: Integer; Comparision: Boolean);
-    [TestCase('EqualValue', '123,False')]
-    [TestCase('DiferentValue', '456,True')]
-    procedure ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
-  end;
-
 {$M+}
   ITestInterface = interface
     ['{AE7C4FC6-1583-4BE4-B00F-E905CA981377}']
@@ -177,38 +164,6 @@ begin
 
   Assert.IsTrue(Executed, 'Don''t execute the right procedure!');
 end;
-
-{ TItTest }
-
-procedure TItTest.ComparingEqualValueOnlyReturnTrueWhenIsEqual(Value: Integer; Comparision: Boolean);
-begin
-  var ValueIt := It;
-
-  ValueIt.IsEqualTo(123);
-
-  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
-end;
-
-procedure TItTest.ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
-begin
-  var ValueIt := It;
-
-  ValueIt.IsNotEqualTo(123);
-
-  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
-end;
-
-procedure TItTest.WhenIsAnyIsCreateAlwaysReturnTrue;
-begin
-  var ValueIt := It;
-
-  ValueIt.IsAny<String>;
-
-  Assert.IsTrue((ValueIt as IIt).Compare(EmptyStr));
-end;
-
-initialization
-  TDUnitX.RegisterTestFixture(TMockInterfaceTest);
 
 end.
 
