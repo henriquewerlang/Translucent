@@ -8,18 +8,11 @@ type
   [TestFixture]
   TMockClassTest = class
   public
-    [Test]
-    procedure WhenCallingWillExecuteHasToReturnAnInterface;
   end;
 
 implementation
 
-{ TMockClassTest }
-
-procedure TMockClassTest.WhenCallingWillExecuteHasToReturnAnInterface;
-begin
-
-end;
+uses Delphi.Mock, Delphi.Mock.Classs;
 
 end.
 

@@ -1,4 +1,4 @@
-unit Delphi.Mock.Interf.Setup.Tests;
+unit Delphi.Mock.Method.Test;
 
 interface
 
@@ -6,10 +6,10 @@ uses DUnitX.TestFramework;
 
 type
   [TestFixture]
-  TMockInterfaceSetupTest = class
+  TMethodDispatcherTest = class
+  public
   end;
 
 implementation
 
 end.
-

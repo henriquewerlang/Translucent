@@ -20,7 +20,7 @@ type
 
 implementation
 
-uses System.SysUtils, Delphi.Mock;
+uses System.SysUtils, Delphi.Mock, Delphi.Mock.Method;
 
 { TItTest }
 

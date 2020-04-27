@@ -2,59 +2,35 @@ unit Delphi.Mock;
 
 interface
 
-uses System.Rtti, System.SysUtils, System.Generics.Collections;
+uses System.Rtti, System.SysUtils, Delphi.Mock.Method;
 
 type
-  EExpectationsNotConfigured = class(Exception);
-  EMethodNotRegistred = class(Exception);
-
-  IIt = interface
-    ['{5B034A6E-3953-4A0A-9A3A-6805210E082E}']
-    function Compare(const Value: TValue): Boolean;
-  end;
-
-  IMethodInfo = interface
-    ['{047238B7-4FEB-4D99-A7B9-108F1627F298}']
-    function GetItParams: TArray<IIt>;
-
-    procedure Execute(out Result: TValue);
-    procedure FillItParams;
-
-    property ItParams: TArray<IIt> read GetItParams;
-  end;
-
-  IMethodRegister = interface
-    ['{7F5EAD8F-550C-422F-ACF6-2D3C19097748}']
-    function GetMethods: TArray<IMethodInfo>;
-
-    procedure RegisterMethod(Method: TRttiMethod; Info: IMethodInfo);
+  IMockSetupWhen<T> = interface
+    ['{1EE67E5A-C054-4771-842F-3FBCD39BB90B}']
+    function When: T;
   end;
 
   IMockSetup<T> = interface
     ['{778531BB-4093-4103-B4BC-72845B78387B}']
-    function When: T;
-  end;
-
-  IMockExpect = interface
-    ['{D8C9262E-8412-4464-97AC-C01ABF3B8991}']
-    function CheckExpectations: String;
+    function Instance: T;
+    function WillExecute(Proc: TProc): IMockSetupWhen<T>;
+    function WillReturn(const Value: TValue): IMockSetupWhen<T>;
   end;
 
   IMockExpectSetup<T> = interface
     ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
+    function CheckExpectations: String;
     function Once: IMockSetup<T>;
   end;
 
   IMock<T> = interface
     ['{C249D074-74A0-4AB9-BA7D-102CA4811019}']
-    function CheckExpectations: String;
     function Expect: IMockExpectSetup<T>;
-    function Instance: T;
-    function WillExecute(Proc: TProc): IMockSetup<T>;
-    function WillReturn(const Value: TValue): IMockSetup<T>;
+    function Setup: IMockSetup<T>;
   end;
 
   TMock = class
+  public
     class function CreateClass<T: class>: IMock<T>;
     class function CreateInterface<T: IInterface>: IMock<T>;
   end;
@@ -76,12 +52,9 @@ type
 
 function It: TIt;
 
-var
-  GItParams: TArray<IIt>;
-
 implementation
 
-uses Delphi.Mock.Interf, Delphi.Mock.Classs, Delphi.Mock.Method.Types;
+uses Delphi.Mock.Interf;
 
 function It: TIt;
 begin
@@ -94,7 +67,7 @@ end;
 
 class function TMock.CreateClass<T>: IMock<T>;
 begin
-  Result := TMockClass<T>.Create;
+//  Result := TMock<T>.Create;
 end;
 
 class function TMock.CreateInterface<T>: IMock<T>;

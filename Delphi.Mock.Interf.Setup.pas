@@ -8,14 +8,15 @@ type
   ENoParamsDefined = class(Exception);
   EParamsLengthDiffer = class(Exception);
 
-  TMockSetupInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>)
+  TMockInterfaceSetup<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>)
   private
-    FMethod: IMethodInfo;
-    FMethodRegister: IMethodRegister;
+    function Instance: T;
+    function WillExecute(Proc: TProc): IMockSetupWhen<T>;
+    function WillReturn(const Value: TValue): IMockSetupWhen<T>;
 
     procedure OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
   public
-    constructor Create(MethodRegister: IMethodRegister; Method: IMethodInfo);
+    constructor Create;
 
     function When: T;
   end;
@@ -24,34 +25,35 @@ implementation
 
 uses System.TypInfo;
 
-{ TMockSetupInterface<T> }
+{ TMockInterfaceSetup<T> }
 
-constructor TMockSetupInterface<T>.Create(MethodRegister: IMethodRegister; Method: IMethodInfo);
+constructor TMockInterfaceSetup<T>.Create;
 begin
   inherited Create(TypeInfo(T), OnInvoke);
-
-  FMethod := Method;
-  FMethodRegister := MethodRegister;
 end;
 
-procedure TMockSetupInterface<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+function TMockInterfaceSetup<T>.Instance: T;
 begin
-  var LengthArg := Pred(Length(Args));
 
-  if LengthArg > 0 then
-    if Length(GItParams) = 0 then
-      raise ENoParamsDefined.Create('You have to use de "It" function to register params to execution!')
-    else if Length(GItParams) <> LengthArg then
-      raise EParamsLengthDiffer.Create('The length of params and it params, must be the same!');
-
-  FMethodRegister.RegisterMethod(Method, FMethod);
-
-  FMethod.FillItParams;
 end;
 
-function TMockSetupInterface<T>.When: T;
+procedure TMockInterfaceSetup<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+begin
+end;
+
+function TMockInterfaceSetup<T>.When: T;
 begin
   QueryInterface(PTypeInfo(TypeInfo(T)).TypeData.GUID, Result);
+end;
+
+function TMockInterfaceSetup<T>.WillExecute(Proc: TProc): IMockSetupWhen<T>;
+begin
+
+end;
+
+function TMockInterfaceSetup<T>.WillReturn(const Value: TValue): IMockSetupWhen<T>;
+begin
+
 end;
 
 end.
