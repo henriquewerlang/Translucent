@@ -10,8 +10,7 @@ type
 
   TVirtualInterfaceEx = class(TVirtualInterface)
   public
-    constructor Create(PIID: PTypeInfo); overload;
-    constructor Create(PIID: PTypeInfo; InvokeEvent: TVirtualInterfaceInvokeEvent); overload;
+    constructor Create(PIID: PTypeInfo; InvokeEvent: TVirtualInterfaceInvokeEvent);
   end;
 
 implementation
@@ -31,9 +30,5 @@ begin
   inherited;
 end;
 
-constructor TVirtualInterfaceEx.Create(PIID: PTypeInfo);
-begin
-  Create(PIID, nil);
-end;
-
 end.
+

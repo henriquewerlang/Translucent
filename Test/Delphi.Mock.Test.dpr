@@ -13,20 +13,11 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   Delphi.Mock in '..\Delphi.Mock.pas',
-  Delphi.Mock.Interf.Tests in 'Delphi.Mock.Interf.Tests.pas',
-  Delphi.Mock.Interf.Setup in '..\Delphi.Mock.Interf.Setup.pas',
-  Delphi.Mock.Interf.Setup.Tests in 'Delphi.Mock.Interf.Setup.Tests.pas',
   Delphi.Mock.VirtualInterface in '..\Delphi.Mock.VirtualInterface.pas',
   Delphi.Mock.VirtualInterface.Test in 'Delphi.Mock.VirtualInterface.Test.pas',
   Delphi.Mock.Method in '..\Delphi.Mock.Method.pas',
-  Delphi.Mock.Interf.Expect in '..\Delphi.Mock.Interf.Expect.pas',
-  Delphi.Mock.Classs.Test in 'Delphi.Mock.Classs.Test.pas',
-  Delphi.Mock.It.Test in 'Delphi.Mock.It.Test.pas',
-  Delphi.Mock.Interf in '..\Delphi.Mock.Interf.pas',
-  Delphi.Mock.Classs in '..\Delphi.Mock.Classs.pas',
-  Delphi.Mock.Classs.Setup in '..\Delphi.Mock.Classs.Setup.pas',
-  Delphi.Mock.Classs.Setup.Test in 'Delphi.Mock.Classs.Setup.Test.pas',
-  Delphi.Mock.Method.Test in 'Delphi.Mock.Method.Test.pas';
+  Delphi.Mock.Method.Test in 'Delphi.Mock.Method.Test.pas',
+  Delphi.Mock.It.Test in 'Delphi.Mock.It.Test.pas';
 
 //Just to not remove de IFDEF
 {$IFNDEF TESTINSIGHT}

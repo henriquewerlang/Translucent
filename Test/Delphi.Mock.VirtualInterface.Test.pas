@@ -11,7 +11,7 @@ type
     [Test]
     procedure WhenTheInterfaceDontHaveAGUIDWillRaiseAException;
     [Test]
-    procedure IfTheInterfaceDontHaveMethodInfoAtiveWillRaiseAException;
+    procedure IfTheInterfaceDontHaveMethodInfoActiveWillRaiseAException;
   end;
 
   IInterfaceWithoutGUI = interface
@@ -29,12 +29,12 @@ uses Delphi.Mock.VirtualInterface;
 
 { TVirtualInterfaceExTest }
 
-procedure TVirtualInterfaceExTest.IfTheInterfaceDontHaveMethodInfoAtiveWillRaiseAException;
+procedure TVirtualInterfaceExTest.IfTheInterfaceDontHaveMethodInfoActiveWillRaiseAException;
 begin
   Assert.WillRaise(
     procedure
     begin
-      TVirtualInterfaceEx.Create(TypeInfo(IInterfaceWithoutMethodInfo));
+      TVirtualInterfaceEx.Create(TypeInfo(IInterfaceWithoutMethodInfo), nil);
     end, EInterfaceWithoutMethodInfo);
 end;
 
@@ -43,7 +43,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      TVirtualInterfaceEx.Create(TypeInfo(IInterfaceWithoutGUI));
+      TVirtualInterfaceEx.Create(TypeInfo(IInterfaceWithoutGUI), nil);
     end, EInterfaceWithoutGUID);
 end;
 

@@ -29,9 +29,15 @@ type
     function Setup: IMockSetup<T>;
   end;
 
+  TMock<T> = class(TInterfacedObject, IMock<T>)
+  private
+    function Expect: IMockExpectSetup<T>;
+    function Setup: IMockSetup<T>;
+  end;
+
   TMock = class
   public
-    class function CreateClass<T: class>: IMock<T>;
+    class function CreateClass<T: class>: TMock<T>;
     class function CreateInterface<T: IInterface>: IMock<T>;
   end;
 
@@ -54,8 +60,6 @@ function It: TIt;
 
 implementation
 
-uses Delphi.Mock.Interf;
-
 function It: TIt;
 begin
   Result := TIt.Create;
@@ -65,14 +69,14 @@ end;
 
 { TMock }
 
-class function TMock.CreateClass<T>: IMock<T>;
+class function TMock.CreateClass<T>: TMock<T>;
 begin
-//  Result := TMock<T>.Create;
+  Result := TMock<T>.Create;
 end;
 
 class function TMock.CreateInterface<T>: IMock<T>;
 begin
-  Result := TMockInterface<T>.Create;
+  Result := TMock<T>.Create;
 end;
 
 { TIt }
@@ -111,6 +115,18 @@ begin
   FItCompare := NotEqualTo;
   FValueToCompare := TValue.From(Value);
   Result := Value;
+end;
+
+{ TMock<T> }
+
+function TMock<T>.Expect: IMockExpectSetup<T>;
+begin
+
+end;
+
+function TMock<T>.Setup: IMockSetup<T>;
+begin
+
 end;
 
 end.
