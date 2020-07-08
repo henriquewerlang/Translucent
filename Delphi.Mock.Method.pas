@@ -5,6 +5,21 @@ interface
 uses System.SysUtils, System.Rtti;
 
 type
+  EDidNotCallTheStartRegister = class(Exception)
+  public
+    constructor Create;
+  end;
+
+  EMethodNotRegistered = class(Exception)
+  public
+    constructor Create(Method: TRttiMethod);
+  end;
+
+  EParamsRegisteredMismatch = class(Exception)
+  public
+    constructor Create;
+  end;
+
   IIt = interface
     ['{5B034A6E-3953-4A0A-9A3A-6805210E082E}']
     function Compare(const Value: TValue): Boolean;
@@ -12,7 +27,15 @@ type
 
   IMethod = interface
     ['{047238B7-4FEB-4D99-A7B9-108F1627F298}']
+    function GetItParams: TArray<IIt>;
+    function GetMethod: TRttiMethod;
+
     procedure Execute(out Result: TValue);
+    procedure SetItParams(const Value: TArray<IIt>);
+    procedure SetMethod(const Value: TRttiMethod);
+
+    property ItParams: TArray<IIt> read GetItParams write SetItParams;
+    property Method: TRttiMethod read GetMethod write SetMethod;
   end;
 
   IMethodExpect = interface
@@ -20,33 +43,34 @@ type
     function CheckExpectation: String;
   end;
 
-  IMethodDispatcher = interface
-    ['{7F5EAD8F-550C-422F-ACF6-2D3C19097748}']
-    procedure Invoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
-  end;
-
   IMethodRegister = interface
-    ['{1E47BDFD-3EF6-447F-804D-2FA4969AA0F9}']
-    function WillExecute(Proc: TProc): IMethod;
-  end;
-
-  TMethodDispatcher = class(TInterfacedObject, IMethodDispatcher)
-  private
-    procedure Invoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+    ['{A3AD240A-0365-40D2-801E-E094BFB1BA9C}']
+    procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+    procedure RegisterMethod(Method: TRttiMethod);
+    procedure StartRegister(Method: IMethod);
   end;
 
   TMethodRegister = class(TInterfacedObject, IMethodRegister)
+  private
+    FMethodRegistering: IMethod;
+    FMethods: TArray<IMethod>;
   public
-    function WillExecute(Proc: TProc): IMethod;
+    procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+    procedure RegisterMethod(Method: TRttiMethod);
+    procedure StartRegister(Method: IMethod);
   end;
 
   TMethodInfo = class(TInterfacedObject)
   private
+    FMethod: TRttiMethod;
+
     FItParams: TArray<IIt>;
   protected
-    procedure Execute(out Result: TValue);
-  public
-    constructor Create;
+    function GetItParams: TArray<IIt>;
+    function GetMethod: TRttiMethod;
+
+    procedure SetItParams(const Value: TArray<IIt>);
+    procedure SetMethod(const Value: TRttiMethod);
   end;
 
   TMethodInfoWillExecute = class(TMethodInfo, IMethod)
@@ -98,19 +122,6 @@ begin
   FProc;
 end;
 
-{ TMethodInfo }
-
-constructor TMethodInfo.Create;
-begin
-  inherited;
-
-  GItParams := nil;
-end;
-
-procedure TMethodInfo.Execute(out Result: TValue);
-begin
-end;
-
 { TMethodInfoWillReturn }
 
 constructor TMethodInfoWillReturn.Create(const ReturnValue: TValue);
@@ -146,18 +157,93 @@ begin
     Result := 'Expected to call once the method but was called 5 times';
 end;
 
-{ TMethodDispatcher }
-
-procedure TMethodDispatcher.Invoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
-begin
-
-end;
-
 { TMethodRegister }
 
-function TMethodRegister.WillExecute(Proc: TProc): IMethod;
+procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 begin
-  Result := TMethodInfoWillExecute.Create(Proc);
+  for var RegisteredMethod in FMethods do
+    if RegisteredMethod.Method = Method then
+    begin
+      var CanCall := True;
+
+      for var A := Low(Args) to High(Args) do
+        if not RegisteredMethod.ItParams[A].Compare(Args[A]) then
+          CanCall := False;
+
+      if CanCall then
+      begin
+        RegisteredMethod.Execute(Result);
+
+        Exit;
+      end;
+    end;
+
+  raise EMethodNotRegistered.Create(Method);
+end;
+
+procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);
+begin
+  if not Assigned(FMethodRegistering) then
+    raise EDidNotCallTheStartRegister.Create;
+
+  if Length(GItParams) <> Length(Method.GetParameters) then
+    raise EParamsRegisteredMismatch.Create;
+
+  FMethodRegistering.ItParams := GItParams;
+  FMethodRegistering.Method := Method;
+  FMethods := FMethods + [FMethodRegistering];
+
+  FMethodRegistering := nil;
+end;
+
+procedure TMethodRegister.StartRegister(Method: IMethod);
+begin
+  FMethodRegistering := Method;
+  GItParams := nil;
+end;
+
+{ EDidNotCallTheStartRegister }
+
+constructor EDidNotCallTheStartRegister.Create;
+begin
+  inherited Create('You must call StartRegister before call RegisterMethod');
+end;
+
+{ TMethodInfo }
+
+function TMethodInfo.GetItParams: TArray<IIt>;
+begin
+  Result := FItParams;
+end;
+
+function TMethodInfo.GetMethod: TRttiMethod;
+begin
+  Result := FMethod;
+end;
+
+procedure TMethodInfo.SetItParams(const Value: TArray<IIt>);
+begin
+  FItParams := Value;
+end;
+
+procedure TMethodInfo.SetMethod(const Value: TRttiMethod);
+begin
+  FMethod := Value;
+end;
+
+{ EMethodNotRegistered }
+
+constructor EMethodNotRegistered.Create(Method: TRttiMethod);
+begin
+  inherited CreateFmt('The calling method %s is not registered!', [Method.Name]);
+end;
+
+{ EParamsRegisteredMismatch }
+
+constructor EParamsRegisteredMismatch.Create;
+begin
+  inherited Create('The procedure being called and the number of parameters registered is different!');
 end;
 
 end.
+
