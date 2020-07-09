@@ -14,10 +14,19 @@ type
     procedure WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
     [Test]
     procedure WhenRegisterAWillReturnMustReturnTheValueRegistred;
+    [Test]
+    procedure WhenCreateAClassMustCallTheCorrectConstructor;
+    [Test]
+    procedure IfDontFindTheConstructorMustRaiseAnException;
   end;
 
   TMyClass = class
+  private
+    FConstructorCalled: String;
   public
+    constructor Create(Param: String); overload;
+    constructor Create(Param1: String; Param2: Integer); overload;
+
     function MyFunction: Integer; virtual;
 
     procedure Execute; virtual;
@@ -28,6 +37,28 @@ implementation
 uses Delphi.Mock, Delphi.Mock.Classes;
 
 { TMockTest }
+
+procedure TMockTest.IfDontFindTheConstructorMustRaiseAnException;
+begin
+  var Mock: TMock<TMyClass> := nil;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      Mock := TMock.CreateClass<TMyClass>([1234]);
+    end, EConstructorNotFound);
+
+  Mock.Free;
+end;
+
+procedure TMockTest.WhenCreateAClassMustCallTheCorrectConstructor;
+begin
+  var Mock := TMock.CreateClass<TMyClass>(['Value']);
+
+  Assert.AreEqual('Create.Param', Mock.Setup.Instance.FConstructorCalled);
+
+  Mock.Free;
+end;
 
 procedure TMockTest.WhenCreateAMockClassMustReturnAInstance;
 begin
@@ -68,6 +99,16 @@ begin
 end;
 
 { TMyClass }
+
+constructor TMyClass.Create(Param: String);
+begin
+  FConstructorCalled := 'Create.Param';
+end;
+
+constructor TMyClass.Create(Param1: String; Param2: Integer);
+begin
+  FConstructorCalled := 'Create.Param1.Param2';
+end;
 
 procedure TMyClass.Execute;
 begin

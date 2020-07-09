@@ -5,31 +5,45 @@ interface
 uses System.SysUtils, System.Rtti, Delphi.Mock.Intf, Delphi.Mock.Method;
 
 type
-  TMockSetupWhen<T: class, constructor> = class
+  EConstructorNotFound = class(Exception)
+  public
+    constructor Create;
+  end;
+
+  TProxyClass<T: class> = class(TVirtualMethodInterceptor)
   private
     FInstance: T;
+
+    function FindMethodConstructor(const ConstructorArgs: TArray<TValue>): TRttiMethod;
+  public
+    constructor Create(const ConstructorArgs: TArray<TValue>);
+
+    destructor Destroy; override;
+  end;
+
+  TMockSetupWhen<T: class> = class
+  private
     FMethodRegister: IMethodRegister;
-    FProxy: TVirtualMethodInterceptor;
+    FProxy: TProxyClass<T>;
 
     procedure OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
   public
-    constructor Create(MethodRegister: IMethodRegister);
+    constructor Create(const ConstructorArgs: TArray<TValue>; MethodRegister: IMethodRegister);
 
     destructor Destroy; override;
 
     function When: T;
   end;
 
-  TMockSetup<T: class, constructor> = class
+  TMockSetup<T: class> = class
   private
-    FInstance: T;
     FMockSetupWhen: TMockSetupWhen<T>;
     FMethodRegister: IMethodRegister;
-    FProxy: TVirtualMethodInterceptor;
+    FProxy: TProxyClass<T>;
 
     procedure OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
   public
-    constructor Create;
+    constructor Create(const ConstructorArgs: TArray<TValue>);
 
     destructor Destroy; override;
 
@@ -38,17 +52,17 @@ type
     function WillReturn(const Value: TValue): TMockSetupWhen<T>;
   end;
 
-  TMockExpectSetup<T: class, constructor> = class
+  TMockExpectSetup<T: class> = class
   public
     function CheckExpectations: String;
     function Once: TMockSetup<T>;
   end;
 
-  TMock<T: class, constructor> = class
+  TMock<T: class> = class
   private
     FSetup: TMockSetup<T>;
   public
-    constructor Create;
+    constructor Create(const ConstructorArgs: TArray<TValue>);
 
     destructor Destroy; override;
 
@@ -59,11 +73,11 @@ implementation
 
 { TMock<T> }
 
-constructor TMock<T>.Create;
+constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>);
 begin
-  inherited;
+  inherited Create;
 
-  FSetup := TMockSetup<T>.Create;
+  FSetup := TMockSetup<T>.Create(ConstructorArgs);
 end;
 
 destructor TMock<T>.Destroy;
@@ -75,35 +89,28 @@ end;
 
 { TMockSetup<T> }
 
-constructor TMockSetup<T>.Create;
+constructor TMockSetup<T>.Create(const ConstructorArgs: TArray<TValue>);
 begin
-  inherited;
+  inherited Create;
 
-  FInstance := T.Create;
   FMethodRegister := TMethodRegister.Create;
-  FMockSetupWhen := TMockSetupWhen<T>.Create(FMethodRegister);
-  FProxy := TVirtualMethodInterceptor.Create(T);
+  FMockSetupWhen := TMockSetupWhen<T>.Create(ConstructorArgs, FMethodRegister);
+  FProxy := TProxyClass<T>.Create(ConstructorArgs);
   FProxy.OnBefore := OnInvoke;
-
-  FProxy.Proxify(FInstance);
 end;
 
 destructor TMockSetup<T>.Destroy;
 begin
   FMockSetupWhen.Free;
 
-  FProxy.Unproxify(FInstance);
-
   FProxy.Free;
-
-  FInstance.Free;
 
   inherited;
 end;
 
 function TMockSetup<T>.Instance: T;
 begin
-  Result := FInstance;
+  Result := FProxy.FInstance;
 end;
 
 procedure TMockSetup<T>.OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
@@ -141,25 +148,18 @@ end;
 
 { TMockSetupWhen<T> }
 
-constructor TMockSetupWhen<T>.Create(MethodRegister: IMethodRegister);
+constructor TMockSetupWhen<T>.Create(const ConstructorArgs: TArray<TValue>; MethodRegister: IMethodRegister);
 begin
   inherited Create;
 
   FMethodRegister := MethodRegister;
-  FInstance := T.Create;
-  FProxy := TVirtualMethodInterceptor.Create(T);
+  FProxy := TProxyClass<T>.Create(ConstructorArgs);
   FProxy.OnBefore := OnInvoke;
-
-  FProxy.Proxify(FInstance);
 end;
 
 destructor TMockSetupWhen<T>.Destroy;
 begin
-  FProxy.Unproxify(FInstance);
-
   FProxy.Free;
-
-  FInstance.Free;
 
   inherited;
 end;
@@ -173,7 +173,61 @@ end;
 
 function TMockSetupWhen<T>.When: T;
 begin
-  Result := FInstance;
+  Result := FProxy.FInstance;
+end;
+
+{ TProxyClass<T> }
+
+constructor TProxyClass<T>.Create(const ConstructorArgs: TArray<TValue>);
+begin
+  inherited Create(T);
+
+  var ConstructorMethod := FindMethodConstructor(ConstructorArgs);
+  var Context := TRttiContext.Create;
+  FInstance := ConstructorMethod.Invoke(T, ConstructorArgs).AsObject as T;
+
+  Proxify(FInstance);
+end;
+
+destructor TProxyClass<T>.Destroy;
+begin
+  if Assigned(FInstance) then
+    Unproxify(FInstance);
+
+  FInstance.Free;
+
+  inherited;
+end;
+
+function TProxyClass<T>.FindMethodConstructor(const ConstructorArgs: TArray<TValue>): TRttiMethod;
+begin
+  var Context := TRttiContext.Create;
+
+  for var Method in Context.GetType(T).GetMethods('Create') do
+  begin
+    var MethodParams := Method.GetParameters;
+
+    var Found := Length(MethodParams) = Length(ConstructorArgs);
+
+    if Found then
+    begin
+      for var A := Low(ConstructorArgs) to High(ConstructorArgs) do
+        if MethodParams[A].ParamType.TypeKind <> ConstructorArgs[A].Kind then
+          Found := False;
+
+      if Found then
+        Exit(Method);
+    end;
+  end;
+
+  raise EConstructorNotFound.Create;
+end;
+
+{ EConstructorNotFound }
+
+constructor EConstructorNotFound.Create;
+begin
+  inherited Create('Constructor not found with these parameters!');
 end;
 
 end.
