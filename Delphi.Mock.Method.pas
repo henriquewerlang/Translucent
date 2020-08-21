@@ -20,6 +20,11 @@ type
     constructor Create;
   end;
 
+  ERegisteredMethodsButDifferentParameters = class(Exception)
+  public
+    constructor Create;
+  end;
+
   IIt = interface
     ['{5B034A6E-3953-4A0A-9A3A-6805210E082E}']
     function Compare(const Value: TValue): Boolean;
@@ -178,11 +183,18 @@ end;
 { TMethodRegister }
 
 procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+var
+  MethodFound: IMethod;
+
 begin
+  MethodFound := nil;
+
   for var RegisteredMethod in FMethods do
     if RegisteredMethod.Method = Method then
     begin
       var CanCall := True;
+
+      MethodFound := RegisteredMethod;
 
       for var A := Low(Args) to High(Args) do
         if not RegisteredMethod.ItParams[A].Compare(Args[A]) then
@@ -196,7 +208,11 @@ begin
       end;
     end;
 
-  raise EMethodNotRegistered.Create(Method);
+  if not Supports(MethodFound, IMethodExpect) then
+    if Assigned(MethodFound) then
+      raise ERegisteredMethodsButDifferentParameters.Create
+    else
+      raise EMethodNotRegistered.Create(Method);
 end;
 
 function TMethodRegister.GetExceptMethods: TArray<IMethodExpect>;
@@ -270,6 +286,13 @@ end;
 constructor EParamsRegisteredMismatch.Create;
 begin
   inherited Create('The procedure being called and the number of parameters registered is different!');
+end;
+
+{ ERegisteredMethodsButDifferentParameters }
+
+constructor ERegisteredMethodsButDifferentParameters.Create;
+begin
+  inherited Create('The called method is registered, but was not executed by parameter difference!');
 end;
 
 end.

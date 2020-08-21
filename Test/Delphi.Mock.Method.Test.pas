@@ -36,6 +36,10 @@ type
     procedure WhenTheOnceMethodIsCalledOnlyOneTimeTheExpcetationMustReturnEmptyString;
     [Test]
     procedure ThePropertyExpectMethodsMustReturnOnlyTheMethodThatImplementsTheExpectedInterface;
+    [Test]
+    procedure WhenAProcedureIsLoggedButNotExecutedByParameterDifferenceHasToGiveAnError;
+    [Test]
+    procedure IfTheMethodFoundIsAnExpectationCanNotGiveAnException;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -100,6 +104,33 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.IfTheMethodFoundIsAnExpectationCanNotGiveAnException;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyMethod.Create;
+  var MyExpectMethod := TMyExceptMethod.Create;
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyExpectMethod);
+
+  It.IsEqualTo('abc');
+
+  MethodRegister.RegisterMethod(Method);
+
+  Assert.WillNotRaise(
+    procedure
+    var
+      Result: TValue;
+
+    begin
+      MethodRegister.ExecuteMethod(Method, ['xxx'], Result)
+    end);
+
+  MethodRegister.Free;
+end;
+
 procedure TMethodRegisterTest.TheMethodCountMustIncByOneEveryTimeTheProcedureIsCalled;
 begin
   var Method := TMethodInfoCounter.Create;
@@ -152,6 +183,30 @@ begin
   MethodRegister.RegisterMethod(Method);
 
   Assert.AreEqual(2, Length(MethodRegister.ExceptMethods));
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.WhenAProcedureIsLoggedButNotExecutedByParameterDifferenceHasToGiveAnError;
+begin
+  var MethodRegister := TMethodRegister.Create;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      var Context := TRttiContext.Create;
+      var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
+      var MyMethod := TMyMethod.Create;
+      var Result: TValue;
+
+      MethodRegister.StartRegister(MyMethod);
+
+      It.IsEqualTo('abc');
+
+      MethodRegister.RegisterMethod(Method);
+
+      MethodRegister.ExecuteMethod(Method, ['zzz'], Result);
+    end, ERegisteredMethodsButDifferentParameters);
 
   MethodRegister.Free;
 end;
