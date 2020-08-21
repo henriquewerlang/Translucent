@@ -45,19 +45,27 @@ type
 
   IMethodRegister = interface
     ['{A3AD240A-0365-40D2-801E-E094BFB1BA9C}']
+    function GetExceptMethods: TArray<IMethodExpect>;
+
     procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
     procedure RegisterMethod(Method: TRttiMethod);
     procedure StartRegister(Method: IMethod);
+
+    property ExceptMethods: TArray<IMethodExpect> read GetExceptMethods;
   end;
 
   TMethodRegister = class(TInterfacedObject, IMethodRegister)
   private
     FMethodRegistering: IMethod;
     FMethods: TArray<IMethod>;
+
+    function GetExceptMethods: TArray<IMethodExpect>;
   public
     procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
     procedure RegisterMethod(Method: TRttiMethod);
     procedure StartRegister(Method: IMethod);
+
+    property ExceptMethods: TArray<IMethodExpect> read GetExceptMethods;
   end;
 
   TMethodInfo = class(TInterfacedObject)
@@ -96,6 +104,8 @@ type
     FExecutionCount: Integer;
   public
     procedure Execute(out Result: TValue);
+
+    property ExecutionCount: Integer read FExecutionCount write FExecutionCount;
   end;
 
   TMethodInfoExpectOnce = class(TMethodInfoCounter, IMethodExpect)
@@ -148,13 +158,21 @@ end;
 { TMethodInfoExpectOnce }
 
 function TMethodInfoExpectOnce.CheckExpectation: String;
-begin
-  Result := EmptyStr;
+const
+  EXPECT_MESSAGE = 'Expected to call once the method but %s';
 
-  if FExecutionCount = 0 then
-    Result := 'Expected to call once the method but never called'
-  else if FExecutionCount > 1 then
-    Result := 'Expected to call once the method but was called 5 times';
+begin
+  if FExecutionCount = 1 then
+    Result := EmptyStr
+  else
+  begin
+    if FExecutionCount = 0 then
+      Result := 'never called'
+    else
+      Result := Format('was called %d times', [FExecutionCount]);
+
+    Result := Format(EXPECT_MESSAGE, [Result]);
+  end;
 end;
 
 { TMethodRegister }
@@ -179,6 +197,15 @@ begin
     end;
 
   raise EMethodNotRegistered.Create(Method);
+end;
+
+function TMethodRegister.GetExceptMethods: TArray<IMethodExpect>;
+begin
+  Result := nil;
+
+  for var Method in FMethods do
+    if Supports(Method, IMethodExpect) then
+      Result := Result + [Method as IMethodExpect];
 end;
 
 procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);

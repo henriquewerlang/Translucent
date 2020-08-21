@@ -14,6 +14,10 @@ type
     procedure WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
     [Test]
     procedure WhenRegisterAWillReturnMustReturnTheValueRegistred;
+    [Test]
+    procedure WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
+    [Test]
+    procedure WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
   end;
 
 {$M+}
@@ -26,7 +30,7 @@ type
 
 implementation
 
-uses Delphi.Mock, Delphi.Mock.Intf;
+uses System.SysUtils, Delphi.Mock, Delphi.Mock.Intf;
 
 { IMockTest }
 
@@ -34,7 +38,18 @@ procedure IMockTest.WhenCreateAMockClassMustReturnAInstanceOfInterface;
 begin
   var Mock := TMock.CreateInterface<IMyInterface>;
 
-  Assert.IsNotNull(Mock.Setup.Instance);
+  Assert.IsNotNull(Mock.Instance);
+end;
+
+procedure IMockTest.WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
+begin
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Expect.Once.When.Execute;
+
+  Mock.Expect.Once.When.MyFunction;
+
+  Assert.AreEqual('Expected to call once the method but never called'#13#10'Expected to call once the method but never called', Mock.CheckExpectations);
 end;
 
 procedure IMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
@@ -48,7 +63,7 @@ begin
       Executed := True;
     end).When.Execute;
 
-  Mock.Setup.Instance.Execute;
+  Mock.Instance.Execute;
 
   Assert.IsTrue(Executed);
 end;
@@ -59,7 +74,16 @@ begin
 
   Mock.Setup.WillReturn(123456).When.MyFunction;
 
-  Assert.AreEqual(123456, Mock.Setup.Instance.MyFunction);
+  Assert.AreEqual(123456, Mock.Instance.MyFunction);
+end;
+
+procedure IMockTest.WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
+begin
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Expect.Once.When.Execute;
+
+  Assert.AreEqual('Expected to call once the method but never called', Mock.CheckExpectations);
 end;
 
 initialization

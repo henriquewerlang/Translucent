@@ -26,11 +26,28 @@ type
     procedure WhenTheNumberOfParametersRecordedIsDifferentFromTheAmountOfParametersTheProcedureHasToRaiseAnError;
     [Test]
     procedure WhenCallAProcedureMustFindTheCorrectProcedureByValueOfCallingParameters;
+    [Test]
+    procedure TheMethodCountMustIncByOneEveryTimeTheProcedureIsCalled;
+    [Test]
+    procedure TheOneMethodWhenNotExecutedMustReturnMessageInExpectation;
+    [Test]
+    procedure WhenTheOnceMethodIsCalledMoreThenOneTimeMustRegisterInTheMessageTheQuantityOsCalls;
+    [Test]
+    procedure WhenTheOnceMethodIsCalledOnlyOneTimeTheExpcetationMustReturnEmptyString;
+    [Test]
+    procedure ThePropertyExpectMethodsMustReturnOnlyTheMethodThatImplementsTheExpectedInterface;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
   private
     FCalled: Boolean;
+
+    procedure Execute(out Result: TValue);
+  end;
+
+  TMyExceptMethod = class(TMethodInfo, IMethod, IMethodExpect)
+  private
+    function CheckExpectation: String;
 
     procedure Execute(out Result: TValue);
   end;
@@ -44,7 +61,7 @@ type
 
 implementation
 
-uses Delphi.Mock;
+uses System.SysUtils, Delphi.Mock;
 
 { TMethodRegisterTest }
 
@@ -79,6 +96,62 @@ begin
 
       MethodRegister.RegisterMethod(nil);
     end, EDidNotCallTheStartRegister);
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.TheMethodCountMustIncByOneEveryTimeTheProcedureIsCalled;
+begin
+  var Method := TMethodInfoCounter.Create;
+  var Value := TValue.Empty;
+
+  for var A := 1 to 10 do
+    Method.Execute(Value);
+
+  Assert.AreEqual(10, Method.ExecutionCount);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.TheOneMethodWhenNotExecutedMustReturnMessageInExpectation;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+
+  Assert.AreEqual('Expected to call once the method but never called', Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.ThePropertyExpectMethodsMustReturnOnlyTheMethodThatImplementsTheExpectedInterface;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyMethod.Create;
+  var MyExpectMethod := TMyExceptMethod.Create;
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.StartRegister(MyExpectMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.StartRegister(MyExpectMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  Assert.AreEqual(2, Length(MethodRegister.ExceptMethods));
 
   MethodRegister.Free;
 end;
@@ -232,6 +305,31 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.WhenTheOnceMethodIsCalledMoreThenOneTimeMustRegisterInTheMessageTheQuantityOsCalls;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+  var Value := TValue.Empty;
+
+  for var A := 1 to 10 do
+    Method.Execute(Value);
+
+  Assert.AreEqual('Expected to call once the method but was called 10 times', Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.WhenTheOnceMethodIsCalledOnlyOneTimeTheExpcetationMustReturnEmptyString;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+  var Value := TValue.Empty;
+
+  Method.Execute(Value);
+
+  Assert.AreEqual(EmptyStr, Method.CheckExpectation);
+
+  Method.Free;
+end;
+
 { TMyMethod }
 
 procedure TMyMethod.Execute(out Result: TValue);
@@ -252,6 +350,18 @@ begin
 end;
 
 procedure TMyClass.MyProcedure(Param: String);
+begin
+
+end;
+
+{ TMyExceptMethod }
+
+function TMyExceptMethod.CheckExpectation: String;
+begin
+  Result := EmptyStr;
+end;
+
+procedure TMyExceptMethod.Execute(out Result: TValue);
 begin
 
 end;
