@@ -106,15 +106,7 @@ end;
 
 function TMockSetupIntf<T>.CheckExpectations: String;
 begin
-  Result := EmptyStr;
-
-  for var Method in FMethodRegister.ExceptMethods do
-  begin
-    if not Result.IsEmpty then
-      Result := Result + #13#10;
-
-    Result := Result + Method.CheckExpectation;
-  end;
+  Result := FMethodRegister.CheckExpectations;
 end;
 
 constructor TMockSetupIntf<T>.Create;

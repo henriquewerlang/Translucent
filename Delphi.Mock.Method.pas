@@ -46,17 +46,19 @@ type
   IMethodExpect = interface
     ['{01FB3CF2-C990-4078-AF97-C9E3F4CD9B44}']
     function CheckExpectation: String;
+    function ExceptationExecuted: Boolean;
   end;
 
   IMethodRegister = interface
     ['{A3AD240A-0365-40D2-801E-E094BFB1BA9C}']
-    function GetExceptMethods: TArray<IMethodExpect>;
+    function CheckExpectations: String;
+    function GetExpectMethods: TArray<IMethodExpect>;
 
     procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
     procedure RegisterMethod(Method: TRttiMethod);
     procedure StartRegister(Method: IMethod);
 
-    property ExceptMethods: TArray<IMethodExpect> read GetExceptMethods;
+    property ExpectMethods: TArray<IMethodExpect> read GetExpectMethods;
   end;
 
   TMethodRegister = class(TInterfacedObject, IMethodRegister)
@@ -64,13 +66,15 @@ type
     FMethodRegistering: IMethod;
     FMethods: TArray<IMethod>;
 
-    function GetExceptMethods: TArray<IMethodExpect>;
+    function GetExpectMethods: TArray<IMethodExpect>;
   public
+    function CheckExpectations: String;
+
     procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
     procedure RegisterMethod(Method: TRttiMethod);
     procedure StartRegister(Method: IMethod);
 
-    property ExceptMethods: TArray<IMethodExpect> read GetExceptMethods;
+    property ExpectMethods: TArray<IMethodExpect> read GetExpectMethods;
   end;
 
   TMethodInfo = class(TInterfacedObject)
@@ -104,7 +108,16 @@ type
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
-  TMethodInfoCounter = class(TMethodInfo, IMethod)
+  TMethodInfoExcept = class(TMethodInfo)
+  private
+    FExceptationExecuted: Boolean;
+  public
+    function ExceptationExecuted: Boolean;
+
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
+  end;
+
+  TMethodInfoCounter = class(TMethodInfoExcept, IMethod)
   private
     FExecutionCount: Integer;
   public
@@ -116,9 +129,10 @@ type
   TMethodInfoExpectOnce = class(TMethodInfoCounter, IMethodExpect)
   public
     function CheckExpectation: String;
+    function ExceptationExecuted: Boolean;
   end;
 
-  TMethodInfoCustomExpectation = class(TMethodInfo, IMethod, IMethodExpect)
+  TMethodInfoCustomExpectation = class(TMethodInfoExcept, IMethod, IMethodExpect)
   private
     FFunc: TFunc<TArray<TValue>, String>;
     FExpectation: String;
@@ -192,7 +206,31 @@ begin
   end;
 end;
 
+function TMethodInfoExpectOnce.ExceptationExecuted: Boolean;
+begin
+  Result := True;
+end;
+
 { TMethodRegister }
+
+function TMethodRegister.CheckExpectations: String;
+begin
+  var MethodExecuted := False;
+  Result := EmptyStr;
+
+  for var Method in ExpectMethods do
+  begin
+    MethodExecuted := MethodExecuted or Method.ExceptationExecuted;
+
+    if not Result.IsEmpty then
+      Result := Result + #13#10;
+
+    Result := Result + Method.CheckExpectation;
+  end;
+
+  if not MethodExecuted then
+    Result := 'No expectations executed!';
+end;
 
 procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 var
@@ -227,7 +265,7 @@ begin
       raise EMethodNotRegistered.Create(Method);
 end;
 
-function TMethodRegister.GetExceptMethods: TArray<IMethodExpect>;
+function TMethodRegister.GetExpectMethods: TArray<IMethodExpect>;
 begin
   Result := nil;
 
@@ -323,7 +361,21 @@ end;
 
 procedure TMethodInfoCustomExpectation.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
-  FExpectation := FFunc(nil);
+  inherited;
+
+  FExpectation := FFunc(Params);
+end;
+
+{ TMethodInfoExcept }
+
+function TMethodInfoExcept.ExceptationExecuted: Boolean;
+begin
+  Result := FExceptationExecuted;
+end;
+
+procedure TMethodInfoExcept.Execute(const Params: TArray<TValue>; out Result: TValue);
+begin
+  FExceptationExecuted := True;
 end;
 
 end.

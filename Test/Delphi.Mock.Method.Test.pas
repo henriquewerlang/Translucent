@@ -2,7 +2,7 @@
 
 interface
 
-uses DUnitX.TestFramework, System.Rtti, Delphi.Mock.Method;
+uses DUnitX.TestFramework, System.Rtti, System.SysUtils, Delphi.Mock.Method;
 
 type
   [TestFixture]
@@ -44,6 +44,16 @@ type
     procedure WhenUsingTheCustomExpectationMustReturnTheValeuFromFunctionRegistered;
     [Test]
     procedure WhenExecuteTheCustomExpectationMustPassTheParamsFromCallingProcedure;
+    [Test]
+    procedure WhenCallAnExceptationMethodMustMarkAsExecuted;
+    [Test]
+    procedure WhenAExpectationIsRegistredButNotCalledMustReturnError;
+    [Test]
+    procedure WhenRegisteredAMethodOfExpectationMustReturnTheMessageOfExpectationWhenCalled;
+    [Test]
+    procedure WhenExistsMoreTheOneExpectationRegisteredMustReturnTheMessageOfAllMethods;
+    [Test]
+    procedure TheMethodExpectOneMustReturnTrueAlwayWhenCheckingIfWasExecuted;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -54,11 +64,17 @@ type
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
-  TMyExceptMethod = class(TMethodInfo, IMethod, IMethodExpect)
+  TMyExpectMethod = class(TMethodInfo, IMethod, IMethodExpect)
   private
+    FMessage: String;
+    FExceptation: Boolean;
+
     function CheckExpectation: String;
+    function ExceptationExecuted: Boolean;
 
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
+  public
+    constructor Create(ExpectationMessage: String = '');
   end;
 
   TMyClass = class
@@ -70,7 +86,7 @@ type
 
 implementation
 
-uses System.SysUtils, Delphi.Mock;
+uses Delphi.Mock;
 
 { TMethodRegisterTest }
 
@@ -114,7 +130,7 @@ begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
   var MethodRegister := TMethodRegister.Create;
-  var MyExpectMethod := TMyExceptMethod.Create;
+  var MyExpectMethod := TMyExpectMethod.Create;
   var Result: TValue;
 
   MethodRegister.StartRegister(MyExpectMethod);
@@ -148,6 +164,15 @@ begin
   Method.Free;
 end;
 
+procedure TMethodRegisterTest.TheMethodExpectOneMustReturnTrueAlwayWhenCheckingIfWasExecuted;
+begin
+  var Method := TMethodInfoExpectOnce.Create;
+
+  Assert.IsTrue(Method.ExceptationExecuted);
+
+  Method.Free;
+end;
+
 procedure TMethodRegisterTest.TheOneMethodWhenNotExecutedMustReturnMessageInExpectation;
 begin
   var Method := TMethodInfoExpectOnce.Create;
@@ -163,7 +188,7 @@ begin
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
   var MethodRegister := TMethodRegister.Create;
   var MyMethod := TMyMethod.Create;
-  var MyExpectMethod := TMyExceptMethod.Create;
+  var MyExpectMethod := TMyExpectMethod.Create;
   var Result: TValue;
 
   MethodRegister.StartRegister(MyMethod);
@@ -186,7 +211,24 @@ begin
 
   MethodRegister.RegisterMethod(Method);
 
-  Assert.AreEqual(2, Length(MethodRegister.ExceptMethods));
+  Assert.AreEqual(2, Length(MethodRegister.ExpectMethods));
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.WhenAExpectationIsRegistredButNotCalledMustReturnError;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyExpectMethod.Create;
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  Assert.AreEqual('No expectations executed!', MethodRegister.CheckExpectations);
 
   MethodRegister.Free;
 end;
@@ -213,6 +255,18 @@ begin
     end, ERegisteredMethodsButDifferentParameters);
 
   MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.WhenCallAnExceptationMethodMustMarkAsExecuted;
+begin
+  var Method := TMethodInfoExcept.Create;
+  var Result := TValue.Empty;
+
+  Method.Execute(nil, Result);
+
+  Assert.IsTrue(Method.ExceptationExecuted);
+
+  Method.Free;
 end;
 
 procedure TMethodRegisterTest.WhenCallAProcedureMustFindTheCorrectProcedureByValueOfCallingParameters;
@@ -343,6 +397,50 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.WhenExistsMoreTheOneExpectationRegisteredMustReturnTheMessageOfAllMethods;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyExpectMethod.Create('Expectation message');
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.ExecuteMethod(Method, nil, Result);
+
+  MethodRegister.ExecuteMethod(Method, nil, Result);
+
+  Assert.AreEqual('Expectation message'#13#10'Expectation message', MethodRegister.CheckExpectations);
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.WhenRegisteredAMethodOfExpectationMustReturnTheMessageOfExpectationWhenCalled;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyExpectMethod.Create('Expectation message');
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.ExecuteMethod(Method, nil, Result);
+
+  Assert.AreEqual('Expectation message', MethodRegister.CheckExpectations);
+
+  MethodRegister.Free;
+end;
+
 procedure TMethodRegisterTest.WhenRegisteringAProcedureWithParametersYouHaveToRecordTheParametersWithTheItFunction;
 begin
   var MethodRegister := TMethodRegister.Create;
@@ -415,7 +513,7 @@ begin
   var Method := TMethodInfoCustomExpectation.Create(
     function (Params: TArray<TValue>): String
     begin
-      Result := 'Return';
+      Result := Params[0].AsString;
     end);
   var Return := TValue.Empty;
 
@@ -451,19 +549,32 @@ begin
 
 end;
 
-{ TMyExceptMethod }
+{ TMyExpectMethod }
 
-function TMyExceptMethod.CheckExpectation: String;
+function TMyExpectMethod.CheckExpectation: String;
 begin
-  Result := EmptyStr;
+  Result := FMessage;
 end;
 
-procedure TMyExceptMethod.Execute(const Params: TArray<TValue>; out Result: TValue);
+constructor TMyExpectMethod.Create(ExpectationMessage: String);
 begin
+  inherited Create;
 
+  FMessage := ExpectationMessage;
+end;
+
+function TMyExpectMethod.ExceptationExecuted: Boolean;
+begin
+  Result := FExceptation;
+end;
+
+procedure TMyExpectMethod.Execute(const Params: TArray<TValue>; out Result: TValue);
+begin
+  FExceptation := True;
 end;
 
 initialization
   TDUnitX.RegisterTestFixture(TMethodRegisterTest);
 
 end.
+
