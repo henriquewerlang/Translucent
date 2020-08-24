@@ -18,6 +18,7 @@ type
 
   IMockExpectSetup<T: IInterface> = interface
     ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
+    function CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
   end;
 
@@ -46,6 +47,7 @@ type
     FMethodRegister: IMethodRegister;
 
     function CheckExpectations: String;
+    function CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
     function WillExecute(Proc: TProc): IMockSetupWhen<T>;
     function WillReturn(const Value: TValue): IMockSetupWhen<T>;
@@ -121,6 +123,13 @@ begin
 
   FMethodRegister := TMethodRegister.Create;
   FMockSetupWhen := TMockSetupWhenIntf<T>.Create(FMethodRegister);
+end;
+
+function TMockSetupIntf<T>.CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
+begin
+  Result := FMockSetupWhen;
+
+  FMethodRegister.StartRegister(TMethodInfoCustomExpectation.Create(Func));
 end;
 
 function TMockSetupIntf<T>.Once: IMockSetupWhen<T>;

@@ -18,6 +18,8 @@ type
     procedure WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
     [Test]
     procedure WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
+    [Test]
+    procedure WhenRegisterACustomExpectationMustCallThisExpectation;
   end;
 
 {$M+}
@@ -30,7 +32,7 @@ type
 
 implementation
 
-uses System.SysUtils, Delphi.Mock, Delphi.Mock.Intf;
+uses System.SysUtils, System.Rtti, Delphi.Mock, Delphi.Mock.Intf;
 
 { IMockTest }
 
@@ -50,6 +52,22 @@ begin
   Mock.Expect.Once.When.MyFunction;
 
   Assert.AreEqual('Expected to call once the method but never called'#13#10'Expected to call once the method but never called', Mock.CheckExpectations);
+end;
+
+procedure IMockTest.WhenRegisterACustomExpectationMustCallThisExpectation;
+begin
+  var Executed := False;
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Expect.CustomExpect(
+    function (Params: TArray<TValue>): String
+    begin
+      Executed := True;
+    end).When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.IsTrue(Executed);
 end;
 
 procedure IMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;

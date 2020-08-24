@@ -35,7 +35,7 @@ type
     function GetItParams: TArray<IIt>;
     function GetMethod: TRttiMethod;
 
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
     procedure SetItParams(const Value: TArray<IIt>);
     procedure SetMethod(const Value: TRttiMethod);
 
@@ -92,7 +92,7 @@ type
   public
     constructor Create(Proc: TProc);
 
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
   TMethodInfoWillReturn = class(TMethodInfo, IMethod)
@@ -101,14 +101,14 @@ type
   public
     constructor Create(const ReturnValue: TValue);
 
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
   TMethodInfoCounter = class(TMethodInfo, IMethod)
   private
     FExecutionCount: Integer;
   public
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
 
     property ExecutionCount: Integer read FExecutionCount write FExecutionCount;
   end;
@@ -116,6 +116,18 @@ type
   TMethodInfoExpectOnce = class(TMethodInfoCounter, IMethodExpect)
   public
     function CheckExpectation: String;
+  end;
+
+  TMethodInfoCustomExpectation = class(TMethodInfo, IMethod, IMethodExpect)
+  private
+    FFunc: TFunc<TArray<TValue>, String>;
+    FExpectation: String;
+  public
+    constructor Create(Func: TFunc<TArray<TValue>, String>);
+
+    function CheckExpectation: String;
+
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
 var
@@ -132,7 +144,7 @@ begin
   FProc := Proc;
 end;
 
-procedure TMethodInfoWillExecute.Execute(out Result: TValue);
+procedure TMethodInfoWillExecute.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
   FProc;
 end;
@@ -146,14 +158,14 @@ begin
   FReturnValue := ReturnValue;
 end;
 
-procedure TMethodInfoWillReturn.Execute(out Result: TValue);
+procedure TMethodInfoWillReturn.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
   Result := FReturnValue;
 end;
 
 { TMethodInfoCounter }
 
-procedure TMethodInfoCounter.Execute(out Result: TValue);
+procedure TMethodInfoCounter.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
   inherited;
 
@@ -202,7 +214,7 @@ begin
 
       if CanCall then
       begin
-        RegisteredMethod.Execute(Result);
+        RegisteredMethod.Execute(Args, Result);
 
         Exit;
       end;
@@ -293,6 +305,25 @@ end;
 constructor ERegisteredMethodsButDifferentParameters.Create;
 begin
   inherited Create('The called method is registered, but was not executed by parameter difference!');
+end;
+
+{ TMethodInfoCustomExpectation }
+
+function TMethodInfoCustomExpectation.CheckExpectation: String;
+begin
+  Result := FExpectation;
+end;
+
+constructor TMethodInfoCustomExpectation.Create(Func: TFunc<TArray<TValue>, String>);
+begin
+  inherited Create;
+
+  FFunc := Func;
+end;
+
+procedure TMethodInfoCustomExpectation.Execute(const Params: TArray<TValue>; out Result: TValue);
+begin
+  FExpectation := FFunc(nil);
 end;
 
 end.

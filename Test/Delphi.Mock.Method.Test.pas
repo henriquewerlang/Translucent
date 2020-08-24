@@ -40,20 +40,25 @@ type
     procedure WhenAProcedureIsLoggedButNotExecutedByParameterDifferenceHasToGiveAnError;
     [Test]
     procedure IfTheMethodFoundIsAnExpectationCanNotGiveAnException;
+    [Test]
+    procedure WhenUsingTheCustomExpectationMustReturnTheValeuFromFunctionRegistered;
+    [Test]
+    procedure WhenExecuteTheCustomExpectationMustPassTheParamsFromCallingProcedure;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
   private
     FCalled: Boolean;
+    FParams: TArray<TValue>;
 
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
   TMyExceptMethod = class(TMethodInfo, IMethod, IMethodExpect)
   private
     function CheckExpectation: String;
 
-    procedure Execute(out Result: TValue);
+    procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
   TMyClass = class
@@ -109,7 +114,6 @@ begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
   var MethodRegister := TMethodRegister.Create;
-  var MyMethod := TMyMethod.Create;
   var MyExpectMethod := TMyExceptMethod.Create;
   var Result: TValue;
 
@@ -137,7 +141,7 @@ begin
   var Value := TValue.Empty;
 
   for var A := 1 to 10 do
-    Method.Execute(Value);
+    Method.Execute(nil, Value);
 
   Assert.AreEqual(10, Method.ExecutionCount);
 
@@ -318,6 +322,27 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.WhenExecuteTheCustomExpectationMustPassTheParamsFromCallingProcedure;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
+  var MethodRegister := TMethodRegister.Create;
+  var MyMethod := TMyMethod.Create;
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  It.IsAny<String>;
+
+  MethodRegister.RegisterMethod(Method);
+
+  MethodRegister.ExecuteMethod(Method, ['String'], Result);
+
+  Assert.AreEqual('String', MyMethod.FParams[0].AsString);
+
+  MethodRegister.Free;
+end;
+
 procedure TMethodRegisterTest.WhenRegisteringAProcedureWithParametersYouHaveToRecordTheParametersWithTheItFunction;
 begin
   var MethodRegister := TMethodRegister.Create;
@@ -366,7 +391,7 @@ begin
   var Value := TValue.Empty;
 
   for var A := 1 to 10 do
-    Method.Execute(Value);
+    Method.Execute(nil, Value);
 
   Assert.AreEqual('Expected to call once the method but was called 10 times', Method.CheckExpectation);
 
@@ -378,18 +403,35 @@ begin
   var Method := TMethodInfoExpectOnce.Create;
   var Value := TValue.Empty;
 
-  Method.Execute(Value);
+  Method.Execute(nil, Value);
 
   Assert.AreEqual(EmptyStr, Method.CheckExpectation);
 
   Method.Free;
 end;
 
+procedure TMethodRegisterTest.WhenUsingTheCustomExpectationMustReturnTheValeuFromFunctionRegistered;
+begin
+  var Method := TMethodInfoCustomExpectation.Create(
+    function (Params: TArray<TValue>): String
+    begin
+      Result := 'Return';
+    end);
+  var Return := TValue.Empty;
+
+  Method.Execute(['Return'], Return);
+
+  Assert.AreEqual('Return', Method.CheckExpectation);
+
+  Method.Free;
+end;
+
 { TMyMethod }
 
-procedure TMyMethod.Execute(out Result: TValue);
+procedure TMyMethod.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
   FCalled := True;
+  FParams := Params;
 end;
 
 { TMyClass }
@@ -416,7 +458,7 @@ begin
   Result := EmptyStr;
 end;
 
-procedure TMyExceptMethod.Execute(out Result: TValue);
+procedure TMyExceptMethod.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
 
 end;
