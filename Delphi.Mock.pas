@@ -64,7 +64,7 @@ end;
 
 function TIt.CompareEqualValue(const Value: TValue): Boolean;
 begin
-  Result := (FValueToCompare.IsEmpty xor Value.IsEmpty) or (FValueToCompare.AsVariant = Value.AsVariant);
+  Result := not (FValueToCompare.IsEmpty or Value.IsEmpty) and (FValueToCompare.AsVariant = Value.AsVariant);
 end;
 
 function TIt.IsAny<T>: T;
