@@ -47,7 +47,6 @@ type
 
     destructor Destroy; override;
 
-    function Instance: T;
     function WillExecute(Proc: TProc): TMockSetupWhen<T>;
     function WillReturn(const Value: TValue): TMockSetupWhen<T>;
   end;
@@ -61,11 +60,14 @@ type
   TMock<T: class> = class
   private
     FSetup: TMockSetup<T>;
+
+    function GetInstance: T;
   public
     constructor Create(const ConstructorArgs: TArray<TValue>);
 
     destructor Destroy; override;
 
+    property Instance: T read GetInstance;
     property Setup: TMockSetup<T> read FSetup;
   end;
 
@@ -87,6 +89,11 @@ begin
   inherited;
 end;
 
+function TMock<T>.GetInstance: T;
+begin
+  Result := Setup.FProxy.FInstance;
+end;
+
 { TMockSetup<T> }
 
 constructor TMockSetup<T>.Create(const ConstructorArgs: TArray<TValue>);
@@ -106,11 +113,6 @@ begin
   FProxy.Free;
 
   inherited;
-end;
-
-function TMockSetup<T>.Instance: T;
-begin
-  Result := FProxy.FInstance;
 end;
 
 procedure TMockSetup<T>.OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);

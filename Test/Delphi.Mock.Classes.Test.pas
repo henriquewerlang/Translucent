@@ -55,7 +55,7 @@ procedure TMockTest.WhenCreateAClassMustCallTheCorrectConstructor;
 begin
   var Mock := TMock.CreateClass<TMyClass>(['Value']);
 
-  Assert.AreEqual('Create.Param', Mock.Setup.Instance.FConstructorCalled);
+  Assert.AreEqual('Create.Param', Mock.Instance.FConstructorCalled);
 
   Mock.Free;
 end;
@@ -64,7 +64,7 @@ procedure TMockTest.WhenCreateAMockClassMustReturnAInstance;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
-  Assert.IsNotNull(Mock.Setup.Instance);
+  Assert.IsNotNull(Mock.Instance);
 
   Mock.Free;
 end;
@@ -80,7 +80,7 @@ begin
       Executed := True;
     end).When.Execute;
 
-  Mock.Setup.Instance.Execute;
+  Mock.Instance.Execute;
 
   Assert.IsTrue(Executed);
 
@@ -93,7 +93,7 @@ begin
 
   Mock.Setup.WillReturn(123456).When.MyFunction;
 
-  Assert.AreEqual(123456, Mock.Setup.Instance.MyFunction);
+  Assert.AreEqual(123456, Mock.Instance.MyFunction);
 
   Mock.Free;
 end;
