@@ -8,6 +8,8 @@ type
   [TestFixture]
   TItTest = class
   public
+    [TearDown]
+    procedure TearDown;
     [Test]
     procedure WhenIsAnyIsCreateAlwaysReturnTrue;
     [TestCase('EqualValue', '123,True')]
@@ -40,6 +42,11 @@ begin
   ValueIt.IsNotEqualTo(123);
 
   Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
+end;
+
+procedure TItTest.TearDown;
+begin
+  GItParams := nil;
 end;
 
 procedure TItTest.WhenIsAnyIsCreateAlwaysReturnTrue;

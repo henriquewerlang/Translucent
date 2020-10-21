@@ -5,6 +5,7 @@ program Delphi.Mock.Test;
 {$ENDIF}
 {$STRONGLINKTYPES ON}
 uses
+  FastMM5,
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -12,6 +13,7 @@ uses
   DUnitX.Loggers.Console,
   {$ENDIF }
   DUnitX.TestFramework,
+  DUnitX.MemoryLeakMonitor.FastMM5,
   Delphi.Mock in '..\Delphi.Mock.pas',
   Delphi.Mock.VirtualInterface in '..\Delphi.Mock.VirtualInterface.pas',
   Delphi.Mock.VirtualInterface.Test in 'Delphi.Mock.VirtualInterface.Test.pas',
@@ -33,8 +35,6 @@ var
 {$ENDIF}
 begin
 {$IFDEF TESTINSIGHT}
-  ReportMemoryLeaksOnShutdown := True;
-
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
   try

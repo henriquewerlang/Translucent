@@ -98,13 +98,12 @@ begin
     procedure
     begin
       var Context := TRttiContext.Create;
-      var Result: TValue;
-
+      
       MethodRegister.StartRegister(TMyMethod.Create);
 
-      MethodRegister.RegisterMethod(Context.GetType(ClassType).GetMethods[0]);
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
 
-      MethodRegister.RegisterMethod(Context.GetType(ClassType).GetMethods[0]);
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
     end, EDidNotCallTheStartRegister);
 
   MethodRegister.Free;
@@ -117,8 +116,6 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      var Result: TValue;
-
       MethodRegister.RegisterMethod(nil);
     end, EDidNotCallTheStartRegister);
 
@@ -131,7 +128,6 @@ begin
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
   var MethodRegister := TMethodRegister.Create;
   var MyExpectMethod := TMyExpectMethod.Create;
-  var Result: TValue;
 
   MethodRegister.StartRegister(MyExpectMethod);
 
@@ -189,7 +185,6 @@ begin
   var MethodRegister := TMethodRegister.Create;
   var MyMethod := TMyMethod.Create;
   var MyExpectMethod := TMyExpectMethod.Create;
-  var Result: TValue;
 
   MethodRegister.StartRegister(MyMethod);
 
@@ -214,6 +209,8 @@ begin
   Assert.AreEqual(2, Length(MethodRegister.ExpectMethods));
 
   MethodRegister.Free;
+
+  Assert.IsTrue(True);
 end;
 
 procedure TMethodRegisterTest.WhenAExpectationIsRegistredButNotCalledMustReturnError;
@@ -222,7 +219,6 @@ begin
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
   var MethodRegister := TMethodRegister.Create;
   var MyMethod := TMyExpectMethod.Create;
-  var Result: TValue;
 
   MethodRegister.StartRegister(MyMethod);
 
@@ -309,7 +305,7 @@ end;
 procedure TMethodRegisterTest.WhenCallExecuteMustCallExecuteFromInterfaceMethod;
 begin
   var Context := TRttiContext.Create;
-  var Method := Context.GetType(ClassType).GetMethods[0];
+  var Method := Context.GetType(TMyClass).GetMethods[0];
   var MethodRegister := TMethodRegister.Create;
   var MyMethod := TMyMethod.Create;
   var Result: TValue;
@@ -333,11 +329,10 @@ begin
     procedure
     begin
       var Context := TRttiContext.Create;
-      var Result: TValue;
 
       MethodRegister.StartRegister(TMyMethod.Create);
 
-      MethodRegister.RegisterMethod(Context.GetType(ClassType).GetMethods[0]);
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
     end);
 
   MethodRegister.Free;
@@ -368,9 +363,9 @@ begin
 
       MethodRegister.StartRegister(MyMethod);
 
-      MethodRegister.RegisterMethod(Context.GetType(ClassType).GetMethods[0]);
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
 
-      MethodRegister.ExecuteMethod(Context.GetType(ClassType).GetMethods[1], [], Result);
+      MethodRegister.ExecuteMethod(Context.GetType(TMyClass).GetMethods[1], [], Result);
     end, EMethodNotRegistered);
 
   MethodRegister.Free;
@@ -450,7 +445,6 @@ begin
     begin
       var Context := TRttiContext.Create;
       var MyMethod := TMyMethod.Create;
-      var Result: TValue;
 
       MethodRegister.StartRegister(MyMethod);
 
@@ -473,7 +467,6 @@ begin
     begin
       var Context := TRttiContext.Create;
       var MyMethod := TMyMethod.Create;
-      var Result: TValue;
 
       MethodRegister.StartRegister(MyMethod);
 
@@ -575,6 +568,10 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TMethodRegisterTest);
+
+  // Avoiding memory leak register.
+  var Context := TRttiContext.Create;
+  Context.GetType(TMyClass).GetMethods;
 
 end.
 

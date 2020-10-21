@@ -144,10 +144,15 @@ type
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
-var
+threadvar
   GItParams: TArray<IIt>;
 
 implementation
+
+procedure ResetGlobalItParams;
+begin
+  GItParams := nil;
+end;
 
 { TMethodInfoWillExecute }
 
@@ -287,12 +292,15 @@ begin
   FMethods := FMethods + [FMethodRegistering];
 
   FMethodRegistering := nil;
+
+  ResetGlobalItParams;
 end;
 
 procedure TMethodRegister.StartRegister(Method: IMethod);
 begin
   FMethodRegistering := Method;
-  GItParams := nil;
+
+  ResetGlobalItParams;
 end;
 
 { EDidNotCallTheStartRegister }

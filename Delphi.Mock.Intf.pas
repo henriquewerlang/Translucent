@@ -18,6 +18,7 @@ type
 
   IMockExpectSetup<T: IInterface> = interface
     ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
+    function CheckExpectations: String;
     function CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
   end;
@@ -30,7 +31,7 @@ type
     function Setup: IMockSetup<T>;
   end;
 
-  TMockSetupWhenIntf<T: IInterface> = class(TVirtualInterfaceEx, IMockSetupWhen<T>)
+  TMockSetupWhenInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetupWhen<T>)
   private
     FMethodRegister: IMethodRegister;
 
@@ -41,7 +42,7 @@ type
     constructor Create(MethodRegister: IMethodRegister);
   end;
 
-  TMockSetupIntf<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>, IMockExpectSetup<T>)
+  TMockSetupInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>, IMockExpectSetup<T>)
   private
     FMockSetupWhen: IMockSetupWhen<T>;
     FMethodRegister: IMethodRegister;
@@ -57,9 +58,10 @@ type
     constructor Create;
   end;
 
-  TMockIntf<T: IInterface> = class(TInterfacedObject, IMock<T>)
+  TMockInterface<T: IInterface> = class(TInterfacedObject, IMock<T>)
   private
-    FMockSetup: TMockSetupIntf<T>;
+    FMockSetup: IMockSetup<T>;
+    FMockExpectSetup: IMockExpectSetup<T>;
 
     function CheckExpectations: String;
     function Expect: IMockExpectSetup<T>;
@@ -73,65 +75,67 @@ implementation
 
 uses System.TypInfo;
 
-{ TMockIntf<T> }
+{ TMockInterface<T> }
 
-function TMockIntf<T>.CheckExpectations: String;
+function TMockInterface<T>.CheckExpectations: String;
 begin
-  Result := FMockSetup.CheckExpectations;
+  Result := FMockExpectSetup.CheckExpectations;
 end;
 
-constructor TMockIntf<T>.Create;
+constructor TMockInterface<T>.Create;
 begin
   inherited;
 
-  FMockSetup := TMockSetupIntf<T>.Create;
+  var Setup := TMockSetupInterface<T>.Create;
+  FMockSetup := Setup;
+  FMockExpectSetup := Setup;
 end;
 
-function TMockIntf<T>.Expect: IMockExpectSetup<T>;
+function TMockInterface<T>.Expect: IMockExpectSetup<T>;
 begin
-  Result := FMockSetup;
+  Result := FMockExpectSetup;
 end;
 
-function TMockIntf<T>.Instance: T;
+function TMockInterface<T>.Instance: T;
 begin
   FMockSetup.QueryInterface(PTypeInfo(TypeInfo(T)).TypeData.GUID, Result);
 end;
 
-function TMockIntf<T>.Setup: IMockSetup<T>;
+function TMockInterface<T>.Setup: IMockSetup<T>;
 begin
   Result := FMockSetup;
 end;
 
-{ TMockSetupIntf<T> }
+{ TMockSetupInterface<T> }
 
-function TMockSetupIntf<T>.CheckExpectations: String;
+function TMockSetupInterface<T>.CheckExpectations: String;
 begin
   Result := FMethodRegister.CheckExpectations;
 end;
 
-constructor TMockSetupIntf<T>.Create;
+constructor TMockSetupInterface<T>.Create;
 begin
   inherited Create(TypeInfo(T), OnInvoke);
 
   FMethodRegister := TMethodRegister.Create;
-  FMockSetupWhen := TMockSetupWhenIntf<T>.Create(FMethodRegister);
+  FMockSetupWhen := TMockSetupWhenInterface<T>.Create(FMethodRegister);
 end;
 
-function TMockSetupIntf<T>.CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
+function TMockSetupInterface<T>.CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
 begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoCustomExpectation.Create(Func));
 end;
 
-function TMockSetupIntf<T>.Once: IMockSetupWhen<T>;
+function TMockSetupInterface<T>.Once: IMockSetupWhen<T>;
 begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoExpectOnce.Create);
 end;
 
-procedure TMockSetupIntf<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+procedure TMockSetupInterface<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 begin
   var AdjustedArgs: TArray<TValue> := Args;
 
@@ -140,35 +144,35 @@ begin
   FMethodRegister.ExecuteMethod(Method, AdjustedArgs, Result);
 end;
 
-function TMockSetupIntf<T>.WillExecute(Proc: TProc): IMockSetupWhen<T>;
+function TMockSetupInterface<T>.WillExecute(Proc: TProc): IMockSetupWhen<T>;
 begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoWillExecute.Create(Proc));
 end;
 
-function TMockSetupIntf<T>.WillReturn(const Value: TValue): IMockSetupWhen<T>;
+function TMockSetupInterface<T>.WillReturn(const Value: TValue): IMockSetupWhen<T>;
 begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoWillReturn.Create(Value));
 end;
 
-{ TMockSetupWhenIntf<T> }
+{ TMockSetupWhenInterface<T> }
 
-constructor TMockSetupWhenIntf<T>.Create(MethodRegister: IMethodRegister);
+constructor TMockSetupWhenInterface<T>.Create(MethodRegister: IMethodRegister);
 begin
   inherited Create(TypeInfo(T), OnInvoke);
 
   FMethodRegister := MethodRegister;
 end;
 
-procedure TMockSetupWhenIntf<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
+procedure TMockSetupWhenInterface<T>.OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
 begin
   FMethodRegister.RegisterMethod(Method);
 end;
 
-function TMockSetupWhenIntf<T>.When: T;
+function TMockSetupWhenInterface<T>.When: T;
 begin
   QueryInterface(PTypeInfo(TypeInfo(T)).TypeData.GUID, Result);
 end;

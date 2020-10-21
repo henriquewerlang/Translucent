@@ -123,4 +123,7 @@ end;
 initialization
   TDUnitX.RegisterTestFixture(TMockTest);
 
+  // Avoid memory leak in tests.
+  TMock.CreateClass<TMyClass>.Free;
+
 end.

@@ -107,4 +107,8 @@ end;
 initialization
   TDUnitX.RegisterTestFixture(IMockTest);
 
+  // Avoid memory leak register in tests.
+  TMock.CreateInterface<IMyInterface>;
+
 end.
+

@@ -46,7 +46,7 @@ end;
 
 class function TMock.CreateInterface<T>: IMock<T>;
 begin
-  Result := TMockIntf<T>.Create;
+  Result := TMockInterface<T>.Create;
 end;
 
 { TIt }
