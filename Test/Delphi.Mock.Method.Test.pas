@@ -15,8 +15,6 @@ type
     [Test]
     procedure AfterCallRegisterMethodMustResetTheControlOfRegistering;
     [Test]
-    procedure WhenCallStartRegisterMustSetNilToItGlobalVariable;
-    [Test]
     procedure WhenCallExecuteMustCallExecuteFromInterfaceMethod;
     [Test]
     procedure WhenClassExecuteOfAMethodThatIsNotRegisteredMustRaiseAException;
@@ -54,6 +52,8 @@ type
     procedure WhenExistsMoreTheOneExpectationRegisteredMustReturnTheMessageOfAllMethods;
     [Test]
     procedure TheMethodExpectOneMustReturnTrueAlwayWhenCheckingIfWasExecuted;
+    [Test]
+    procedure WhenRegisteringAMethodAndAnErrorIsRaisedTheGlobalVarOfItsMustBeReseted;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -238,10 +238,12 @@ begin
     begin
       var Context := TRttiContext.Create;
       var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
-      var MyMethod := TMyMethod.Create;
+      var MyMethod: IMethod := TMyMethod.Create;
       var Result: TValue;
 
       MethodRegister.StartRegister(MyMethod);
+
+      MyMethod := nil;
 
       It.IsEqualTo('abc');
 
@@ -338,18 +340,6 @@ begin
   MethodRegister.Free;
 end;
 
-procedure TMethodRegisterTest.WhenCallStartRegisterMustSetNilToItGlobalVariable;
-begin
-  GItParams := [TIt.Create];
-  var MethodRegister := TMethodRegister.Create;
-
-  MethodRegister.StartRegister(TMyMethod.Create);
-
-  Assert.IsNull(GItParams);
-
-  MethodRegister.Free;
-end;
-
 procedure TMethodRegisterTest.WhenClassExecuteOfAMethodThatIsNotRegisteredMustRaiseAException;
 begin
   var MethodRegister := TMethodRegister.Create;
@@ -432,6 +422,29 @@ begin
   MethodRegister.ExecuteMethod(Method, nil, Result);
 
   Assert.AreEqual('Expectation message', MethodRegister.CheckExpectations);
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.WhenRegisteringAMethodAndAnErrorIsRaisedTheGlobalVarOfItsMustBeReseted;
+begin
+  var MethodRegister := TMethodRegister.Create;
+
+  It.IsAny<String>;
+
+  It.IsAny<String>;
+
+  var Context := TRttiContext.Create;
+  var MyMethod := TMyMethod.Create;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  try
+    MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethod('MyProcedure'));
+  except
+  end;
+
+  Assert.AreEqual(0, Length(GItParams));
 
   MethodRegister.Free;
 end;

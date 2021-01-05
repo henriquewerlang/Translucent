@@ -144,8 +144,8 @@ type
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
-threadvar
-  GItParams: TArray<IIt>;
+var
+  GItParams: TArray<IIt> = nil;
 
 implementation
 
@@ -281,26 +281,26 @@ end;
 
 procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);
 begin
-  if not Assigned(FMethodRegistering) then
-    raise EDidNotCallTheStartRegister.Create;
+  try
+    if not Assigned(FMethodRegistering) then
+      raise EDidNotCallTheStartRegister.Create;
 
-  if Length(GItParams) <> Length(Method.GetParameters) then
-    raise EParamsRegisteredMismatch.Create;
+    if Length(GItParams) <> Length(Method.GetParameters) then
+      raise EParamsRegisteredMismatch.Create;
 
-  FMethodRegistering.ItParams := GItParams;
-  FMethodRegistering.Method := Method;
-  FMethods := FMethods + [FMethodRegistering];
+    FMethodRegistering.ItParams := GItParams;
+    FMethodRegistering.Method := Method;
+    FMethods := FMethods + [FMethodRegistering];
 
-  FMethodRegistering := nil;
-
-  ResetGlobalItParams;
+    FMethodRegistering := nil;
+  finally
+    ResetGlobalItParams;
+  end;
 end;
 
 procedure TMethodRegister.StartRegister(Method: IMethod);
 begin
   FMethodRegistering := Method;
-
-  ResetGlobalItParams;
 end;
 
 { EDidNotCallTheStartRegister }
