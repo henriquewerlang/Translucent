@@ -231,24 +231,23 @@ end;
 
 procedure TMethodRegisterTest.WhenAProcedureIsLoggedButNotExecutedByParameterDifferenceHasToGiveAnError;
 begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
   var MethodRegister := TMethodRegister.Create;
+  var MyMethod: IMethod := TMyMethod.Create;
+  var Result: TValue;
+
+  MethodRegister.StartRegister(MyMethod);
+
+  MyMethod := nil;
+
+  It.IsEqualTo('abc');
+
+  MethodRegister.RegisterMethod(Method);
 
   Assert.WillRaise(
     procedure
     begin
-      var Context := TRttiContext.Create;
-      var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
-      var MyMethod: IMethod := TMyMethod.Create;
-      var Result: TValue;
-
-      MethodRegister.StartRegister(MyMethod);
-
-      MyMethod := nil;
-
-      It.IsEqualTo('abc');
-
-      MethodRegister.RegisterMethod(Method);
-
       MethodRegister.ExecuteMethod(Method, ['zzz'], Result);
     end, ERegisteredMethodsButDifferentParameters);
 
