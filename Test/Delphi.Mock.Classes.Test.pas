@@ -18,6 +18,14 @@ type
     procedure WhenCreateAClassMustCallTheCorrectConstructor;
     [Test]
     procedure IfDontFindTheConstructorMustRaiseAnException;
+    [Test]
+    procedure WhenRegisterAnExpectationMustReturnAEmptyStringIfTheExpectationIsConclued;
+    [Test]
+    procedure WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
+    [Test]
+    procedure WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
+    [Test]
+    procedure WhenRegisterACustomExpectationMustCallThisExpectation;
   end;
 
   TMyClass = class
@@ -34,7 +42,7 @@ type
 
 implementation
 
-uses Delphi.Mock, Delphi.Mock.Classes;
+uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Classes;
 
 { TMockTest }
 
@@ -69,6 +77,50 @@ begin
   Mock.Free;
 end;
 
+procedure TMockTest.WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
+begin
+  var Mock := TMock.CreateClass<TMyClass>;
+
+  Mock.Expect.Once.When.Execute;
+
+  Mock.Expect.Once.When.MyFunction;
+
+  Assert.AreEqual('Expected to call once the method but never called'#13#10'Expected to call once the method but never called', Mock.CheckExpectations);
+
+  Mock.Free;
+end;
+
+procedure TMockTest.WhenRegisterACustomExpectationMustCallThisExpectation;
+begin
+  var Executed := False;
+  var Mock := TMock.CreateClass<TMyClass>;
+
+  Mock.Expect.CustomExpect(
+    function (Params: TArray<TValue>): String
+    begin
+      Executed := True;
+    end).When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.IsTrue(Executed);
+
+  Mock.Free;
+end;
+
+procedure TMockTest.WhenRegisterAnExpectationMustReturnAEmptyStringIfTheExpectationIsConclued;
+begin
+  var Mock := TMock.CreateClass<TMyClass>;
+
+  Mock.Expect.Once.When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.AreEqual(EmptyStr, Mock.CheckExpectations);
+
+  Mock.Free;
+end;
+
 procedure TMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
 begin
   var Executed := False;
@@ -98,6 +150,17 @@ begin
   Mock.Free;
 end;
 
+procedure TMockTest.WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
+begin
+  var Mock := TMock.CreateClass<TMyClass>;
+
+  Mock.Expect.Once.When.Execute;
+
+  Assert.AreEqual('Expected to call once the method but never called', Mock.CheckExpectations);
+
+  Mock.Free;
+end;
+
 { TMyClass }
 
 constructor TMyClass.Create(Param: String);
@@ -121,8 +184,6 @@ begin
 end;
 
 initialization
-  TDUnitX.RegisterTestFixture(TMockTest);
-
   // Avoid memory leak in tests.
   TMock.CreateClass<TMyClass>.Free;
 

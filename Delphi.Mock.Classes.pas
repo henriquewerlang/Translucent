@@ -35,7 +35,7 @@ type
     function When: T;
   end;
 
-  TMockSetup<T: class> = class
+  TMockSetupCommon<T: class> = class
   private
     FMockSetupWhen: TMockSetupWhen<T>;
     FMethodRegister: IMethodRegister;
@@ -46,47 +46,66 @@ type
     constructor Create(const ConstructorArgs: TArray<TValue>);
 
     destructor Destroy; override;
+  end;
 
+  TMockSetup<T: class> = class(TMockSetupCommon<T>)
+  public
     function WillExecute(Proc: TProc): TMockSetupWhen<T>;
     function WillReturn(const Value: TValue): TMockSetupWhen<T>;
   end;
 
-  TMockExpectSetup<T: class> = class
+  TMockExpectSetup<T: class> = class(TMockSetupCommon<T>)
   public
     function CheckExpectations: String;
-    function Once: TMockSetup<T>;
+    function CustomExpect(Func: TFunc<TArray<TValue>, String>): TMockSetupWhen<T>;
+    function Once: TMockSetupWhen<T>;
   end;
 
   TMock<T: class> = class
   private
-    FSetup: TMockSetup<T>;
+    FSetupCommon: TMockSetupCommon<T>;
 
     function GetInstance: T;
+    function GetExcept: TMockExpectSetup<T>;
+    function GetSetup: TMockSetup<T>;
   public
     constructor Create(const ConstructorArgs: TArray<TValue>);
 
     destructor Destroy; override;
 
+    function CheckExpectations: String;
+
+    property Expect: TMockExpectSetup<T> read GetExcept;
     property Instance: T read GetInstance;
-    property Setup: TMockSetup<T> read FSetup;
+    property Setup: TMockSetup<T> read GetSetup;
   end;
 
 implementation
 
 { TMock<T> }
 
+function TMock<T>.CheckExpectations: String;
+begin
+  Result := Expect.CheckExpectations;
+end;
+
 constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>);
 begin
   inherited Create;
 
-  FSetup := TMockSetup<T>.Create(ConstructorArgs);
+  FSetupCommon := TMockSetup<T>.Create(ConstructorArgs);
 end;
 
 destructor TMock<T>.Destroy;
 begin
-  FSetup.Free;
+  FSetupCommon.Free;
 
   inherited;
+end;
+
+function TMock<T>.GetExcept: TMockExpectSetup<T>;
+begin
+  Result := TMockExpectSetup<T>(FSetupCommon)
 end;
 
 function TMock<T>.GetInstance: T;
@@ -94,33 +113,12 @@ begin
   Result := Setup.FProxy.FInstance;
 end;
 
+function TMock<T>.GetSetup: TMockSetup<T>;
+begin
+  Result := TMockSetup<T>(FSetupCommon)
+end;
+
 { TMockSetup<T> }
-
-constructor TMockSetup<T>.Create(const ConstructorArgs: TArray<TValue>);
-begin
-  inherited Create;
-
-  FMethodRegister := TMethodRegister.Create;
-  FMockSetupWhen := TMockSetupWhen<T>.Create(ConstructorArgs, FMethodRegister);
-  FProxy := TProxyClass<T>.Create(ConstructorArgs);
-  FProxy.OnBefore := OnInvoke;
-end;
-
-destructor TMockSetup<T>.Destroy;
-begin
-  FMockSetupWhen.Free;
-
-  FProxy.Free;
-
-  inherited;
-end;
-
-procedure TMockSetup<T>.OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
-begin
-  DoInvoke := False;
-
-  FMethodRegister.ExecuteMethod(Method, Args, Result);
-end;
 
 function TMockSetup<T>.WillExecute(Proc: TProc): TMockSetupWhen<T>;
 begin
@@ -140,12 +138,21 @@ end;
 
 function TMockExpectSetup<T>.CheckExpectations: String;
 begin
-
+  Result := FMethodRegister.CheckExpectations;
 end;
 
-function TMockExpectSetup<T>.Once: TMockSetup<T>;
+function TMockExpectSetup<T>.CustomExpect(Func: TFunc<TArray<TValue>, String>): TMockSetupWhen<T>;
 begin
+  Result := FMockSetupWhen;
 
+  FMethodRegister.StartRegister(TMethodInfoCustomExpectation.Create(Func));
+end;
+
+function TMockExpectSetup<T>.Once: TMockSetupWhen<T>;
+begin
+  Result := FMockSetupWhen;
+
+  FMethodRegister.StartRegister(TMethodInfoExpectOnce.Create);
 end;
 
 { TMockSetupWhen<T> }
@@ -230,6 +237,34 @@ end;
 constructor EConstructorNotFound.Create;
 begin
   inherited Create('Constructor not found with these parameters!');
+end;
+
+{ TMockSetupCommon<T> }
+
+constructor TMockSetupCommon<T>.Create(const ConstructorArgs: TArray<TValue>);
+begin
+  inherited Create;
+
+  FMethodRegister := TMethodRegister.Create;
+  FMockSetupWhen := TMockSetupWhen<T>.Create(ConstructorArgs, FMethodRegister);
+  FProxy := TProxyClass<T>.Create(ConstructorArgs);
+  FProxy.OnBefore := OnInvoke;
+end;
+
+destructor TMockSetupCommon<T>.Destroy;
+begin
+  FMockSetupWhen.Free;
+
+  FProxy.Free;
+
+  inherited;
+end;
+
+procedure TMockSetupCommon<T>.OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
+begin
+  DoInvoke := False;
+
+  FMethodRegister.ExecuteMethod(Method, Args, Result);
 end;
 
 end.
