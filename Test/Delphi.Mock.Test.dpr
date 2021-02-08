@@ -34,6 +34,12 @@ var
   nunitLogger : ITestLogger;
 {$ENDIF}
 begin
+  FastMM_OutputDebugStringEvents := [];
+  FastMM_LogToFileEvents := [mmetUnexpectedMemoryLeakSummary];
+  FastMM_MessageBoxEvents := [mmetDebugBlockDoubleFree, mmetDebugBlockReallocOfFreedBlock, mmetVirtualMethodCallOnFreedObject];
+
+  FastMM_DeleteEventLogFile;
+
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
