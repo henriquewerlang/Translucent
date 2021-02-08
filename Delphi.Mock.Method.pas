@@ -20,6 +20,11 @@ type
     constructor Create;
   end;
 
+  ENonVirtualMethod = class(Exception)
+  public
+    constructor Create(Method: TRttiMethod);
+  end;
+
   ERegisteredMethodsButDifferentParameters = class(Exception)
   public
     constructor Create;
@@ -285,6 +290,9 @@ begin
     if not Assigned(FMethodRegistering) then
       raise EDidNotCallTheStartRegister.Create;
 
+    if not (Method.DispatchKind in [dkVtable, dkDynamic, dkInterface]) then
+      raise ENonVirtualMethod.Create(Method);
+
     if Length(GItParams) <> Length(Method.GetParameters) then
       raise EParamsRegisteredMismatch.Create;
 
@@ -384,6 +392,13 @@ end;
 procedure TMethodInfoExcept.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
   FExceptationExecuted := True;
+end;
+
+{ ENonVirtualMethod }
+
+constructor ENonVirtualMethod.Create(Method: TRttiMethod);
+begin
+  inherited CreateFmt('The method "%s" can''t be static!', [Method.Name]);
 end;
 
 end.

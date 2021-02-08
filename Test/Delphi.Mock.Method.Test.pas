@@ -54,6 +54,8 @@ type
     procedure TheMethodExpectOneMustReturnTrueAlwayWhenCheckingIfWasExecuted;
     [Test]
     procedure WhenRegisteringAMethodAndAnErrorIsRaisedTheGlobalVarOfItsMustBeReseted;
+    [Test]
+    procedure WhenTheMethodBeingRegisteredCannotBeOverrideItHasToGiveError;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -79,9 +81,10 @@ type
 
   TMyClass = class
   public
-    procedure AnyProcedure;
-    procedure AnotherProcedure(Param: String; Param2: Integer);
-    procedure MyProcedure(Param: String);
+    procedure AnyProcedure; virtual;
+    procedure AnotherProcedure(Param: String; Param2: Integer); dynamic;
+    procedure MyProcedure(Param: String); virtual;
+    procedure NonVirtualProcedure;
   end;
 
 implementation
@@ -466,6 +469,24 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.WhenTheMethodBeingRegisteredCannotBeOverrideItHasToGiveError;
+begin
+  var MethodRegister := TMethodRegister.Create;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      var Context := TRttiContext.Create;
+      var MyMethod := TMyMethod.Create;
+
+      MethodRegister.StartRegister(MyMethod);
+
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethod('NonVirtualProcedure'));
+    end, ENonVirtualMethod);
+
+  MethodRegister.Free;
+end;
+
 procedure TMethodRegisterTest.WhenTheNumberOfParametersRecordedIsDifferentFromTheAmountOfParametersTheProcedureHasToRaiseAnError;
 begin
   var MethodRegister := TMethodRegister.Create;
@@ -550,6 +571,11 @@ begin
 end;
 
 procedure TMyClass.MyProcedure(Param: String);
+begin
+
+end;
+
+procedure TMyClass.NonVirtualProcedure;
 begin
 
 end;
