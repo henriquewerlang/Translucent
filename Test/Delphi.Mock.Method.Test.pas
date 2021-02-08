@@ -174,9 +174,10 @@ end;
 
 procedure TMethodRegisterTest.TheOneMethodWhenNotExecutedMustReturnMessageInExpectation;
 begin
-  var Method := TMethodInfoExpectOnce.Create;
+  var Method:= TMethodInfoExpectOnce.Create;
+  Method.Method := TRttiContext.Create.GetType(TMyClass).GetMethod('AnyProcedure');
 
-  Assert.AreEqual('Expected to call once the method but never called', Method.CheckExpectation);
+  Assert.AreEqual('Expected to call the method "AnyProcedure" once but never called', Method.CheckExpectation);
 
   Method.Free;
 end;
@@ -512,12 +513,13 @@ end;
 procedure TMethodRegisterTest.WhenTheOnceMethodIsCalledMoreThenOneTimeMustRegisterInTheMessageTheQuantityOsCalls;
 begin
   var Method := TMethodInfoExpectOnce.Create;
+  Method.Method := TRttiContext.Create.GetType(TMyClass).GetMethod('AnyProcedure');
   var Value := TValue.Empty;
 
   for var A := 1 to 10 do
     Method.Execute(nil, Value);
 
-  Assert.AreEqual('Expected to call once the method but was called 10 times', Method.CheckExpectation);
+  Assert.AreEqual('Expected to call the method "AnyProcedure" once but was called 10 times', Method.CheckExpectation);
 
   Method.Free;
 end;

@@ -2,7 +2,7 @@
 
 interface
 
-uses System.SysUtils, System.Rtti, Delphi.Mock.Intf, Delphi.Mock.Method;
+uses System.SysUtils, System.Rtti, Delphi.Mock.Method;
 
 type
   EConstructorNotFound = class(Exception)

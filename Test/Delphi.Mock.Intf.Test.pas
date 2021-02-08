@@ -51,7 +51,7 @@ begin
 
   Mock.Expect.Once.When.MyFunction;
 
-  Assert.AreEqual('Expected to call once the method but never called'#13#10'Expected to call once the method but never called', Mock.CheckExpectations);
+  Assert.AreEqual('Expected to call the method "Execute" once but never called'#13#10'Expected to call the method "MyFunction" once but never called', Mock.CheckExpectations);
 end;
 
 procedure IMockTest.WhenRegisterACustomExpectationMustCallThisExpectation;
@@ -101,7 +101,7 @@ begin
 
   Mock.Expect.Once.When.Execute;
 
-  Assert.AreEqual('Expected to call once the method but never called', Mock.CheckExpectations);
+  Assert.AreEqual('Expected to call the method "Execute" once but never called', Mock.CheckExpectations);
 end;
 
 initialization

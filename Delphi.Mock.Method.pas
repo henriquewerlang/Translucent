@@ -93,6 +93,8 @@ type
 
     procedure SetItParams(const Value: TArray<IIt>);
     procedure SetMethod(const Value: TRttiMethod);
+  public
+    property Method: TRttiMethod read GetMethod write SetMethod;
   end;
 
   TMethodInfoWillExecute = class(TMethodInfo, IMethod)
@@ -200,7 +202,7 @@ end;
 
 function TMethodInfoExpectOnce.CheckExpectation: String;
 const
-  EXPECT_MESSAGE = 'Expected to call once the method but %s';
+  EXPECT_MESSAGE = 'Expected to call the method "%s" once but %s';
 
 begin
   if FExecutionCount = 1 then
@@ -212,7 +214,7 @@ begin
     else
       Result := Format('was called %d times', [FExecutionCount]);
 
-    Result := Format(EXPECT_MESSAGE, [Result]);
+    Result := Format(EXPECT_MESSAGE, [Method.Name, Result]);
   end;
 end;
 
