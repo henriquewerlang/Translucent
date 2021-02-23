@@ -139,6 +139,12 @@ type
     function ExceptationExecuted: Boolean;
   end;
 
+  TMethodInfoExpectNever = class(TMethodInfoCounter, IMethodExpect)
+  public
+    function CheckExpectation: String;
+    function ExceptationExecuted: Boolean;
+  end;
+
   TMethodInfoCustomExpectation = class(TMethodInfoExcept, IMethod, IMethodExpect)
   private
     FFunc: TFunc<TArray<TValue>, String>;
@@ -401,6 +407,21 @@ end;
 constructor ENonVirtualMethod.Create(Method: TRttiMethod);
 begin
   inherited CreateFmt('The method "%s" can''t be static!', [Method.Name]);
+end;
+
+{ TMethodInfoExpectNever }
+
+function TMethodInfoExpectNever.CheckExpectation: String;
+begin
+  if FExecutionCount = 0 then
+    Result := EmptyStr
+  else
+    Result := Format('Expected to never be called the procedure "%s", but was called %d times', [Method.Name, FExecutionCount]);
+end;
+
+function TMethodInfoExpectNever.ExceptationExecuted: Boolean;
+begin
+  Result := True;
 end;
 
 end.

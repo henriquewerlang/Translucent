@@ -20,6 +20,7 @@ type
     ['{3E5A7304-B683-474B-A799-B5BDE281AC22}']
     function CheckExpectations: String;
     function CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
+    function Never: IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
   end;
 
@@ -49,6 +50,7 @@ type
 
     function CheckExpectations: String;
     function CustomExpect(Func: TFunc<TArray<TValue>, String>): IMockSetupWhen<T>;
+    function Never: IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
     function WillExecute(Proc: TProc): IMockSetupWhen<T>;
     function WillReturn(const Value: TValue): IMockSetupWhen<T>;
@@ -126,6 +128,13 @@ begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoCustomExpectation.Create(Func));
+end;
+
+function TMockSetupInterface<T>.Never: IMockSetupWhen<T>;
+begin
+  Result := FMockSetupWhen;
+
+  FMethodRegister.StartRegister(TMethodInfoExpectNever.Create);
 end;
 
 function TMockSetupInterface<T>.Once: IMockSetupWhen<T>;

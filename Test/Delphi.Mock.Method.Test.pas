@@ -56,6 +56,12 @@ type
     procedure WhenRegisteringAMethodAndAnErrorIsRaisedTheGlobalVarOfItsMustBeReseted;
     [Test]
     procedure WhenTheMethodBeingRegisteredCannotBeOverrideItHasToGiveError;
+    [Test]
+    procedure IfTheNeverCallIsExecutedMustReturnTheExpectationError;
+    [Test]
+    procedure IfTheNeverCallIsNotExecutedMustReturnTheExpectationEmpty;
+    [Test]
+    procedure TheNeverCallExpectationMustReturnTrueInTheCheckExecuted;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -150,6 +156,29 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.IfTheNeverCallIsExecutedMustReturnTheExpectationError;
+begin
+  var Method := TMethodInfoExpectNever.Create;
+  Method.Method := TRttiContext.Create.GetType(TMyClass).GetMethod('AnyProcedure');
+  var Value := TValue.Empty;
+
+  for var A := 1 to 10 do
+    Method.Execute(nil, Value);
+
+  Assert.AreEqual('Expected to never be called the procedure "AnyProcedure", but was called 10 times', Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.IfTheNeverCallIsNotExecutedMustReturnTheExpectationEmpty;
+begin
+  var Method := TMethodInfoExpectNever.Create;
+
+  Assert.AreEqual(EmptyStr, Method.CheckExpectation);
+
+  Method.Free;
+end;
+
 procedure TMethodRegisterTest.TheMethodCountMustIncByOneEveryTimeTheProcedureIsCalled;
 begin
   var Method := TMethodInfoCounter.Create;
@@ -166,6 +195,15 @@ end;
 procedure TMethodRegisterTest.TheMethodExpectOneMustReturnTrueAlwayWhenCheckingIfWasExecuted;
 begin
   var Method := TMethodInfoExpectOnce.Create;
+
+  Assert.IsTrue(Method.ExceptationExecuted);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.TheNeverCallExpectationMustReturnTrueInTheCheckExecuted;
+begin
+  var Method := TMethodInfoExpectNever.Create;
 
   Assert.IsTrue(Method.ExceptationExecuted);
 
