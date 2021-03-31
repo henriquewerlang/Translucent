@@ -62,6 +62,8 @@ type
     procedure IfTheNeverCallIsNotExecutedMustReturnTheExpectationEmpty;
     [Test]
     procedure TheNeverCallExpectationMustReturnTrueInTheCheckExecuted;
+    [Test]
+    procedure WhenRegistredAExpectationAndANormalProcedureMustExecuteBothMethods;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -87,6 +89,8 @@ type
 
   TMyClass = class
   public
+    function MyFunction: Integer; virtual;
+
     procedure AnyProcedure; virtual;
     procedure AnotherProcedure(Param: String; Param2: Integer); dynamic;
     procedure MyProcedure(Param: String); virtual;
@@ -508,6 +512,29 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.WhenRegistredAExpectationAndANormalProcedureMustExecuteBothMethods;
+begin
+  var MethodRegister := TMethodRegister.Create;
+  var MyFunction := TRttiContext.Create.GetType(TMyClass).GetMethod('MyFunction');
+  var Return := TValue.Empty;
+
+  MethodRegister.StartRegister(TMethodInfoWillReturn.Create(200));
+
+  MethodRegister.RegisterMethod(MyFunction);
+
+  MethodRegister.StartRegister(TMethodInfoExpectOnce.Create);
+
+  MethodRegister.RegisterMethod(MyFunction);
+
+  MethodRegister.ExecuteMethod(MyFunction, nil, Return);
+
+  Assert.AreEqual(200, Return.AsInteger);
+
+  Assert.AreEqual(EmptyStr, MethodRegister.CheckExpectations);
+
+  MethodRegister.Free;
+end;
+
 procedure TMethodRegisterTest.WhenTheMethodBeingRegisteredCannotBeOverrideItHasToGiveError;
 begin
   var MethodRegister := TMethodRegister.Create;
@@ -608,6 +635,11 @@ end;
 procedure TMyClass.AnyProcedure;
 begin
 
+end;
+
+function TMyClass.MyFunction: Integer;
+begin
+  Result := 100;
 end;
 
 procedure TMyClass.MyProcedure(Param: String);

@@ -2,7 +2,7 @@ unit Delphi.Mock.Method;
 
 interface
 
-uses System.SysUtils, System.Rtti;
+uses System.SysUtils, System.Rtti, System.Generics.Collections;
 
 type
   EDidNotCallTheStartRegister = class(Exception)
@@ -69,10 +69,15 @@ type
   TMethodRegister = class(TInterfacedObject, IMethodRegister)
   private
     FMethodRegistering: IMethod;
-    FMethods: TArray<IMethod>;
+    FMethodExecute: TDictionary<TRttiMethod, TList<IMethod>>;
+    FMethodExpect: TDictionary<TRttiMethod, TList<IMethod>>;
 
     function GetExpectMethods: TArray<IMethodExpect>;
   public
+    constructor Create;
+
+    destructor Destroy; override;
+
     function CheckExpectations: String;
 
     procedure ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
@@ -250,46 +255,70 @@ begin
     Result := 'No expectations executed!';
 end;
 
+constructor TMethodRegister.Create;
+begin
+  inherited;
+
+  FMethodExecute := TObjectDictionary<TRttiMethod, TList<IMethod>>.Create([doOwnsValues]);
+
+  FMethodExpect := TObjectDictionary<TRttiMethod, TList<IMethod>>.Create([doOwnsValues]);
+end;
+
+destructor TMethodRegister.Destroy;
+begin
+  FMethodExecute.Free;
+
+  FMethodExpect.Free;
+
+  inherited;
+end;
+
 procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
-var
-  MethodFound: IMethod;
+
+  function SameParams(const ItParams: TArray<IIt>): Boolean;
+  begin
+    Result := True;
+
+    for var A := Low(Args) to High(Args) do
+      if not ItParams[A].Compare(Args[A]) then
+        Exit(False);
+  end;
+
+  function FindMethod(List: TDictionary<TRttiMethod, TList<IMethod>>): IMethod;
+  begin
+    Result := nil;
+
+    if List.ContainsKey(Method) then
+      for var MethodRegistered in List[Method] do
+        if SameParams(MethodRegistered.ItParams) then
+          Exit(MethodRegistered);
+  end;
 
 begin
-  MethodFound := nil;
+  if FMethodExecute.ContainsKey(Method) then
+  begin
+    var MethodExecute := FindMethod(FMethodExecute);
+    var MethodExpectation := FindMethod(FMethodExpect);
 
-  for var RegisteredMethod in FMethods do
-    if RegisteredMethod.Method = Method then
-    begin
-      var CanCall := True;
+    if Assigned(MethodExpectation) and (MethodExpectation <> MethodExecute) then
+      MethodExpectation.Execute(Args, Result);
 
-      MethodFound := RegisteredMethod;
-
-      for var A := Low(Args) to High(Args) do
-        if not RegisteredMethod.ItParams[A].Compare(Args[A]) then
-          CanCall := False;
-
-      if CanCall then
-      begin
-        RegisteredMethod.Execute(Args, Result);
-
-        Exit;
-      end;
-    end;
-
-  if not Supports(MethodFound, IMethodExpect) then
-    if Assigned(MethodFound) then
+    if Assigned(MethodExecute) then
+      MethodExecute.Execute(Args, Result)
+    else if not FMethodExpect.ContainsKey(Method) then
       raise ERegisteredMethodsButDifferentParameters.Create
-    else
-      raise EMethodNotRegistered.Create(Method);
+  end
+  else
+    raise EMethodNotRegistered.Create(Method)
 end;
 
 function TMethodRegister.GetExpectMethods: TArray<IMethodExpect>;
 begin
   Result := nil;
 
-  for var Method in FMethods do
-    if Supports(Method, IMethodExpect) then
-      Result := Result + [Method as IMethodExpect];
+  for var Method in FMethodExpect.Values do
+    for var Expect in Method.ToArray do
+      Result := Result + [Expect as IMethodExpect];
 end;
 
 procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);
@@ -306,7 +335,19 @@ begin
 
     FMethodRegistering.ItParams := GItParams;
     FMethodRegistering.Method := Method;
-    FMethods := FMethods + [FMethodRegistering];
+
+    if Supports(FMethodRegistering, IMethodExpect) then
+    begin
+      if not FMethodExpect.ContainsKey(Method) then
+        FMethodExpect.Add(Method, TList<IMethod>.Create);
+
+      FMethodExpect[Method].Add(FMethodRegistering);
+    end;
+
+    if not FMethodExecute.ContainsKey(Method) then
+      FMethodExecute.Add(Method, TList<IMethod>.Create);
+
+    FMethodExecute[Method].Add(FMethodRegistering);
 
     FMethodRegistering := nil;
   finally
