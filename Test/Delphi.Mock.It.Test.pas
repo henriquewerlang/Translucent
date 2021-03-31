@@ -18,6 +18,10 @@ type
     [TestCase('EqualValue', '123,False')]
     [TestCase('DiferentValue', '456,True')]
     procedure ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
+    [Test]
+    procedure WhenPassTheParamIndexMustFillTheItParamsWithTheSizeExpected;
+    [Test]
+    procedure WhenPassTheParamIndexMustKeepTheLenghtOfGlobalVarWithTheBiggestValueIndex;
   end;
 
 implementation
@@ -56,6 +60,22 @@ begin
   ValueIt.IsAny<String>;
 
   Assert.IsTrue((ValueIt as IIt).Compare(EmptyStr));
+end;
+
+procedure TItTest.WhenPassTheParamIndexMustFillTheItParamsWithTheSizeExpected;
+begin
+  It(4).IsAny<String>;
+
+  Assert.AreEqual(5, Length(GItParams));
+end;
+
+procedure TItTest.WhenPassTheParamIndexMustKeepTheLenghtOfGlobalVarWithTheBiggestValueIndex;
+begin
+  It(4).IsAny<String>;
+
+  It(1).IsAny<String>;
+
+  Assert.AreEqual(5, Length(GItParams));
 end;
 
 end.

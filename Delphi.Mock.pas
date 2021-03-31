@@ -26,15 +26,25 @@ type
     function IsNotEqualTo<T>(const Value: T): T;
   end;
 
-function It: TIt;
+function It: TIt; overload;
+function It(ParamIndex: Integer): TIt; overload;
 
 implementation
 
+uses System.Math;
+
 function It: TIt;
+begin
+  Result := It(Length(GItParams));
+end;
+
+function It(ParamIndex: Integer): TIt;
 begin
   Result := TIt.Create;
 
-  GItParams := GItParams + [Result];
+  SetLength(GItParams, Max(Succ(ParamIndex), Length(GItParams)));
+
+  GItParams[ParamIndex] := Result;
 end;
 
 { TMock }
@@ -64,13 +74,13 @@ end;
 
 function TIt.CompareEqualValue(const Value: TValue): Boolean;
 begin
-  Result := not (FValueToCompare.IsEmpty or Value.IsEmpty) and (FValueToCompare.AsVariant = Value.AsVariant);
+  Result := not(FValueToCompare.IsEmpty or Value.IsEmpty) and (FValueToCompare.AsVariant = Value.AsVariant);
 end;
 
 function TIt.IsAny<T>: T;
 begin
   FItCompare := Any;
-  Result := Default(T);
+  Result := Default (T);
 end;
 
 function TIt.IsEqualTo<T>(const Value: T): T;
@@ -88,4 +98,3 @@ begin
 end;
 
 end.
-
