@@ -64,6 +64,10 @@ type
     procedure TheNeverCallExpectationMustReturnTrueInTheCheckExecuted;
     [Test]
     procedure WhenRegistredAExpectationAndANormalProcedureMustExecuteBothMethods;
+    [Test]
+    procedure TheExecutionCountExpectationIsNotEqualToExpectationMustReturnThenDiferencesOfCalls;
+    [Test]
+    procedure IfTheExecutionCountExpectationIsEqualToExpectationMustReturnAEmptyString;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -135,6 +139,20 @@ begin
   MethodRegister.Free;
 end;
 
+procedure TMethodRegisterTest.IfTheExecutionCountExpectationIsEqualToExpectationMustReturnAEmptyString;
+begin
+  var Method := TMethodInfoExpectExecutionCount.Create(10);
+  Method.Method := TRttiContext.Create.GetType(TMyClass).GetMethod('AnyProcedure');
+  var Value := TValue.Empty;
+
+  for var A := 1 to 10 do
+    Method.Execute(nil, Value);
+
+  Assert.AreEqual(EmptyStr, Method.CheckExpectation);
+
+  Method.Free;
+end;
+
 procedure TMethodRegisterTest.IfTheMethodFoundIsAnExpectationCanNotGiveAnException;
 begin
   var Context := TRttiContext.Create;
@@ -179,6 +197,20 @@ begin
   var Method := TMethodInfoExpectNever.Create;
 
   Assert.AreEqual(EmptyStr, Method.CheckExpectation);
+
+  Method.Free;
+end;
+
+procedure TMethodRegisterTest.TheExecutionCountExpectationIsNotEqualToExpectationMustReturnThenDiferencesOfCalls;
+begin
+  var Method := TMethodInfoExpectExecutionCount.Create(5);
+  Method.Method := TRttiContext.Create.GetType(TMyClass).GetMethod('AnyProcedure');
+  var Value := TValue.Empty;
+
+  for var A := 1 to 10 do
+    Method.Execute(nil, Value);
+
+  Assert.AreEqual('Expected to call the method "AnyProcedure" 5 times, but was called 10 times', Method.CheckExpectation);
 
   Method.Free;
 end;

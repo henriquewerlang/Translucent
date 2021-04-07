@@ -24,6 +24,8 @@ type
     procedure WhenRegisterTheNeverCallExpectationAnCallTheProcedureMustReturnAExpectation;
     [Test]
     procedure WhenRegisterTheNeverCallExpectationAndTheExpectationIsValidMustReturnAEmptyValue;
+    [Test]
+    procedure WhenRegisterTheExecutionCallExpectationMustReturnTheExpectation;
   end;
 
 {$M+}
@@ -106,6 +108,17 @@ begin
   Mock.Expect.Once.When.Execute;
 
   Assert.AreEqual('Expected to call the method "Execute" once but never called', Mock.CheckExpectations);
+end;
+
+procedure IMockTest.WhenRegisterTheExecutionCallExpectationMustReturnTheExpectation;
+begin
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Expect.ExecutionCount(5).When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.AreEqual('Expected to call the method "Execute" 5 times, but was called 1 times', Mock.CheckExpectations);
 end;
 
 procedure IMockTest.WhenRegisterTheNeverCallExpectationAnCallTheProcedureMustReturnAExpectation;

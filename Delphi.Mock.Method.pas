@@ -150,6 +150,16 @@ type
     function ExceptationExecuted: Boolean;
   end;
 
+  TMethodInfoExpectExecutionCount = class(TMethodInfoCounter, IMethodExpect)
+  private
+    FExpectedExecutionCount: Integer;
+  public
+    constructor Create(ExpectedExecutionCount: Integer);
+
+    function CheckExpectation: String;
+    function ExceptationExecuted: Boolean;
+  end;
+
   TMethodInfoCustomExpectation = class(TMethodInfoExcept, IMethod, IMethodExpect)
   private
     FFunc: TFunc<TArray<TValue>, String>;
@@ -461,6 +471,28 @@ begin
 end;
 
 function TMethodInfoExpectNever.ExceptationExecuted: Boolean;
+begin
+  Result := True;
+end;
+
+{ TMethodInfoExpectExecutionCount }
+
+function TMethodInfoExpectExecutionCount.CheckExpectation: String;
+begin
+  if FExpectedExecutionCount = FExecutionCount then
+    Result := EmptyStr
+  else
+    Result := Format('Expected to call the method "%s" %d times, but was called %d times', [Method.Name, FExpectedExecutionCount, FExecutionCount]);
+end;
+
+constructor TMethodInfoExpectExecutionCount.Create(ExpectedExecutionCount: Integer);
+begin
+  inherited Create;
+
+  FExpectedExecutionCount := ExpectedExecutionCount;
+end;
+
+function TMethodInfoExpectExecutionCount.ExceptationExecuted: Boolean;
 begin
   Result := True;
 end;
