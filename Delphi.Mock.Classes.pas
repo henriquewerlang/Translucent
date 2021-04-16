@@ -58,6 +58,7 @@ type
   public
     function CheckExpectations: String;
     function CustomExpect(Func: TFunc<TArray<TValue>, String>): TMockSetupWhen<T>;
+    function Never: TMockSetupWhen<T>;
     function Once: TMockSetupWhen<T>;
   end;
 
@@ -146,6 +147,13 @@ begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoCustomExpectation.Create(Func));
+end;
+
+function TMockExpectSetup<T>.Never: TMockSetupWhen<T>;
+begin
+  Result := FMockSetupWhen;
+
+  FMethodRegister.StartRegister(TMethodInfoExpectNever.Create);
 end;
 
 function TMockExpectSetup<T>.Once: TMockSetupWhen<T>;

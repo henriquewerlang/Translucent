@@ -26,6 +26,8 @@ type
     procedure WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
     [Test]
     procedure WhenRegisterACustomExpectationMustCallThisExpectation;
+    [Test]
+    procedure WhenTheNeverExpectationIsExecutedMustReturnAMessageInExpectation;
   end;
 
   TMyClass = class
@@ -157,6 +159,19 @@ begin
   Mock.Expect.Once.When.Execute;
 
   Assert.AreEqual('Expected to call the method "Execute" once but never called', Mock.CheckExpectations);
+
+  Mock.Free;
+end;
+
+procedure TMockTest.WhenTheNeverExpectationIsExecutedMustReturnAMessageInExpectation;
+begin
+  var Mock := TMock.CreateClass<TMyClass>;
+
+  Mock.Expect.Never.When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.AreEqual('Expected to never be called the procedure "Execute", but was called 1 times', Mock.CheckExpectations);
 
   Mock.Free;
 end;
