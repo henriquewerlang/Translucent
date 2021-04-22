@@ -43,7 +43,7 @@ type
 
     procedure OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
   public
-    constructor Create(const ConstructorArgs: TArray<TValue>);
+    constructor Create(const ConstructorArgs: TArray<TValue>; MethodRegister: IMethodRegister);
 
     destructor Destroy; override;
   end;
@@ -64,7 +64,9 @@ type
 
   TMock<T: class> = class
   private
-    FSetupCommon: TMockSetupCommon<T>;
+    FMethodRegister: IMethodRegister;
+    FMockSetup: TMockSetup<T>;
+    FMockExpectSetup: TMockExpectSetup<T>;
 
     function GetInstance: T;
     function GetExcept: TMockExpectSetup<T>;
@@ -94,19 +96,23 @@ constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>);
 begin
   inherited Create;
 
-  FSetupCommon := TMockSetup<T>.Create(ConstructorArgs);
+  FMethodRegister := TMethodRegister.Create;
+  FMockSetup := TMockSetup<T>.Create(ConstructorArgs, FMethodRegister);
+  FMockExpectSetup := TMockExpectSetup<T>.Create(ConstructorArgs, FMethodRegister);
 end;
 
 destructor TMock<T>.Destroy;
 begin
-  FSetupCommon.Free;
+  FMockSetup.Free;
+
+  FMockExpectSetup.Free;
 
   inherited;
 end;
 
 function TMock<T>.GetExcept: TMockExpectSetup<T>;
 begin
-  Result := TMockExpectSetup<T>(FSetupCommon)
+  Result := FMockExpectSetup;
 end;
 
 function TMock<T>.GetInstance: T;
@@ -116,7 +122,7 @@ end;
 
 function TMock<T>.GetSetup: TMockSetup<T>;
 begin
-  Result := TMockSetup<T>(FSetupCommon)
+  Result := FMockSetup;
 end;
 
 { TMockSetup<T> }
@@ -249,11 +255,11 @@ end;
 
 { TMockSetupCommon<T> }
 
-constructor TMockSetupCommon<T>.Create(const ConstructorArgs: TArray<TValue>);
+constructor TMockSetupCommon<T>.Create(const ConstructorArgs: TArray<TValue>; MethodRegister: IMethodRegister);
 begin
   inherited Create;
 
-  FMethodRegister := TMethodRegister.Create;
+  FMethodRegister := MethodRegister;
   FMockSetupWhen := TMockSetupWhen<T>.Create(ConstructorArgs, FMethodRegister);
   FProxy := TProxyClass<T>.Create(ConstructorArgs);
   FProxy.OnBefore := OnInvoke;
