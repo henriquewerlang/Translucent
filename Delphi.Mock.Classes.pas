@@ -72,7 +72,7 @@ type
     function GetExcept: TMockExpectSetup<T>;
     function GetSetup: TMockSetup<T>;
   public
-    constructor Create(const ConstructorArgs: TArray<TValue>);
+    constructor Create(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean);
 
     destructor Destroy; override;
 
@@ -92,11 +92,11 @@ begin
   Result := Expect.CheckExpectations;
 end;
 
-constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>);
+constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean);
 begin
   inherited Create;
 
-  FMethodRegister := TMethodRegister.Create;
+  FMethodRegister := TMethodRegister.Create(AutoMock);
   FMockSetup := TMockSetup<T>.Create(ConstructorArgs, FMethodRegister);
   FMockExpectSetup := TMockExpectSetup<T>.Create(ConstructorArgs, FMethodRegister);
 end;

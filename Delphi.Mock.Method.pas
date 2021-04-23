@@ -71,10 +71,11 @@ type
     FMethodRegistering: IMethod;
     FMethodExecute: TDictionary<TRttiMethod, TList<IMethod>>;
     FMethodExpect: TDictionary<TRttiMethod, TList<IMethod>>;
+    FAutoMock: Boolean;
 
     function GetExpectMethods: TArray<IMethodExpect>;
   public
-    constructor Create;
+    constructor Create(const AutoMock: Boolean);
 
     destructor Destroy; override;
 
@@ -265,12 +266,12 @@ begin
     Result := 'No expectations executed!';
 end;
 
-constructor TMethodRegister.Create;
+constructor TMethodRegister.Create(const AutoMock: Boolean);
 begin
-  inherited;
+  inherited Create;
 
+  FAutoMock := AutoMock;
   FMethodExecute := TObjectDictionary<TRttiMethod, TList<IMethod>>.Create([doOwnsValues]);
-
   FMethodExpect := TObjectDictionary<TRttiMethod, TList<IMethod>>.Create([doOwnsValues]);
 end;
 
@@ -318,8 +319,8 @@ begin
     else if not FMethodExpect.ContainsKey(Method) then
       raise ERegisteredMethodsButDifferentParameters.Create
   end
-  else
-    raise EMethodNotRegistered.Create(Method)
+  else if not FAutoMock then
+    raise EMethodNotRegistered.Create(Method);
 end;
 
 function TMethodRegister.GetExpectMethods: TArray<IMethodExpect>;

@@ -68,6 +68,8 @@ type
     procedure TheExecutionCountExpectationIsNotEqualToExpectationMustReturnThenDiferencesOfCalls;
     [Test]
     procedure IfTheExecutionCountExpectationIsEqualToExpectationMustReturnAEmptyString;
+    [Test]
+    procedure IfTheAutoMockIsEnabledCantRaiseAnyErrorInTheExecutionOfAMethod;
   end;
 
   TMyMethod = class(TMethodInfo, IMethod)
@@ -109,13 +111,13 @@ uses Delphi.Mock;
 
 procedure TMethodRegisterTest.AfterCallRegisterMethodMustResetTheControlOfRegistering;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillRaise(
     procedure
     begin
       var Context := TRttiContext.Create;
-      
+
       MethodRegister.StartRegister(TMyMethod.Create);
 
       MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
@@ -128,13 +130,29 @@ end;
 
 procedure TMethodRegisterTest.IfDontCallStartRegisterAndTryToRegisterAMethodMustRaiseAException;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillRaise(
     procedure
     begin
       MethodRegister.RegisterMethod(nil);
     end, EDidNotCallTheStartRegister);
+
+  MethodRegister.Free;
+end;
+
+procedure TMethodRegisterTest.IfTheAutoMockIsEnabledCantRaiseAnyErrorInTheExecutionOfAMethod;
+begin
+  var Context := TRttiContext.Create;
+  var Method := Context.GetType(TMyClass).GetMethod('AnotherProcedure');
+  var MethodRegister := TMethodRegister.Create(True);
+  var Result: TValue;
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      MethodRegister.ExecuteMethod(Method, nil, Result);
+    end);
 
   MethodRegister.Free;
 end;
@@ -157,7 +175,7 @@ procedure TMethodRegisterTest.IfTheMethodFoundIsAnExpectationCanNotGiveAnExcepti
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyExpectMethod := TMyExpectMethod.Create;
 
   MethodRegister.StartRegister(MyExpectMethod);
@@ -260,7 +278,7 @@ procedure TMethodRegisterTest.ThePropertyExpectMethodsMustReturnOnlyTheMethodTha
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyMethod.Create;
   var MyExpectMethod := TMyExpectMethod.Create;
 
@@ -295,7 +313,7 @@ procedure TMethodRegisterTest.WhenAExpectationIsRegistredButNotCalledMustReturnE
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyExpectMethod.Create;
 
   MethodRegister.StartRegister(MyMethod);
@@ -311,7 +329,7 @@ procedure TMethodRegisterTest.WhenAProcedureIsLoggedButNotExecutedByParameterDif
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod: IMethod := TMyMethod.Create;
   var Result: TValue;
 
@@ -348,7 +366,7 @@ procedure TMethodRegisterTest.WhenCallAProcedureMustFindTheCorrectProcedureByVal
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('AnotherProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyMethod.Create;
   var MyMethodCorrect := TMyMethod.Create;
   var Result: TValue;
@@ -385,7 +403,7 @@ procedure TMethodRegisterTest.WhenCallExecuteMustCallExecuteFromInterfaceMethod;
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethods[0];
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyMethod.Create;
   var Result: TValue;
 
@@ -402,7 +420,7 @@ end;
 
 procedure TMethodRegisterTest.WhenCallStartRegisterCantRaiseAExpcetionWhenCallRegisterMethod;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillNotRaise(
     procedure
@@ -419,7 +437,7 @@ end;
 
 procedure TMethodRegisterTest.WhenClassExecuteOfAMethodThatIsNotRegisteredMustRaiseAException;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillRaise(
     procedure
@@ -442,7 +460,7 @@ procedure TMethodRegisterTest.WhenExecuteTheCustomExpectationMustPassTheParamsFr
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('MyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyMethod.Create;
   var Result: TValue;
 
@@ -463,7 +481,7 @@ procedure TMethodRegisterTest.WhenExistsMoreTheOneExpectationRegisteredMustRetur
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyExpectMethod.Create('Expectation message');
   var Result: TValue;
 
@@ -488,7 +506,7 @@ procedure TMethodRegisterTest.WhenRegisteredAMethodOfExpectationMustReturnTheMes
 begin
   var Context := TRttiContext.Create;
   var Method := Context.GetType(TMyClass).GetMethod('AnyProcedure');
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyMethod := TMyExpectMethod.Create('Expectation message');
   var Result: TValue;
 
@@ -505,7 +523,7 @@ end;
 
 procedure TMethodRegisterTest.WhenRegisteringAMethodAndAnErrorIsRaisedTheGlobalVarOfItsMustBeReseted;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   It.IsAny<String>;
 
@@ -528,7 +546,7 @@ end;
 
 procedure TMethodRegisterTest.WhenRegisteringAProcedureWithParametersYouHaveToRecordTheParametersWithTheItFunction;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillRaise(
     procedure
@@ -546,7 +564,7 @@ end;
 
 procedure TMethodRegisterTest.WhenRegistredAExpectationAndANormalProcedureMustExecuteBothMethods;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
   var MyFunction := TRttiContext.Create.GetType(TMyClass).GetMethod('MyFunction');
   var Return := TValue.Empty;
 
@@ -569,7 +587,7 @@ end;
 
 procedure TMethodRegisterTest.WhenTheMethodBeingRegisteredCannotBeOverrideItHasToGiveError;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   Assert.WillRaise(
     procedure
@@ -587,7 +605,7 @@ end;
 
 procedure TMethodRegisterTest.WhenTheNumberOfParametersRecordedIsDifferentFromTheAmountOfParametersTheProcedureHasToRaiseAnError;
 begin
-  var MethodRegister := TMethodRegister.Create;
+  var MethodRegister := TMethodRegister.Create(False);
 
   It.IsAny<String>;
 

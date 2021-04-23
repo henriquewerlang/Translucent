@@ -59,7 +59,7 @@ type
 
     procedure OnInvoke(Method: TRttiMethod; const Args: TArray<TValue>; out Result: TValue);
   public
-    constructor Create;
+    constructor Create(const AutoMock: Boolean);
   end;
 
   TMockInterface<T: IInterface> = class(TInterfacedObject, IMock<T>)
@@ -72,7 +72,7 @@ type
     function Instance: T;
     function Setup: IMockSetup<T>;
   public
-    constructor Create;
+    constructor Create(const AutoMock: Boolean);
   end;
 
 implementation
@@ -86,11 +86,11 @@ begin
   Result := FMockExpectSetup.CheckExpectations;
 end;
 
-constructor TMockInterface<T>.Create;
+constructor TMockInterface<T>.Create(const AutoMock: Boolean);
 begin
-  inherited;
+  inherited Create;
 
-  var Setup := TMockSetupInterface<T>.Create;
+  var Setup := TMockSetupInterface<T>.Create(AutoMock);
   FMockSetup := Setup;
   FMockExpectSetup := Setup;
 end;
@@ -117,11 +117,11 @@ begin
   Result := FMethodRegister.CheckExpectations;
 end;
 
-constructor TMockSetupInterface<T>.Create;
+constructor TMockSetupInterface<T>.Create(const AutoMock: Boolean);
 begin
   inherited Create(TypeInfo(T), OnInvoke);
 
-  FMethodRegister := TMethodRegister.Create;
+  FMethodRegister := TMethodRegister.Create(AutoMock);
   FMockSetupWhen := TMockSetupWhenInterface<T>.Create(FMethodRegister);
 end;
 
