@@ -26,6 +26,10 @@ type
     procedure WhenRegisterTheNeverCallExpectationAndTheExpectationIsValidMustReturnAEmptyValue;
     [Test]
     procedure WhenRegisterTheExecutionCallExpectationMustReturnTheExpectation;
+    [Test]
+    procedure WhenRegisterAWillExecuteMustCallTheProcedureRegistredWithParams;
+    [Test]
+    procedure WhenRegisterAWillExecuteMustCallTheFunctionRegistredWithParams;
   end;
 
 {$M+}
@@ -76,6 +80,22 @@ begin
   Assert.IsTrue(Executed);
 end;
 
+procedure IMockTest.WhenRegisterAWillExecuteMustCallTheFunctionRegistredWithParams;
+begin
+  var Executed := False;
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Setup.WillExecute(
+    function(Params: TArray<TValue>): TValue
+    begin
+      Executed := True;
+    end).When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.IsTrue(Executed);
+end;
+
 procedure IMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
 begin
   var Executed := False;
@@ -83,6 +103,22 @@ begin
 
   Mock.Setup.WillExecute(
     procedure
+    begin
+      Executed := True;
+    end).When.Execute;
+
+  Mock.Instance.Execute;
+
+  Assert.IsTrue(Executed);
+end;
+
+procedure IMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistredWithParams;
+begin
+  var Executed := False;
+  var Mock := TMock.CreateInterface<IMyInterface>;
+
+  Mock.Setup.WillExecute(
+    procedure(Params: TArray<TValue>)
     begin
       Executed := True;
     end).When.Execute;

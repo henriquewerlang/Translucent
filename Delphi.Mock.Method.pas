@@ -105,9 +105,11 @@ type
 
   TMethodInfoWillExecute = class(TMethodInfo, IMethod)
   private
-    FProc: TProc;
+    FProc: TFunc<TArray<TValue>, TValue>;
   public
-    constructor Create(Proc: TProc);
+    constructor Create(Proc: TProc); overload;
+    constructor Create(Proc: TProc<TArray<TValue>>); overload;
+    constructor Create(Proc: TFunc<TArray<TValue>, TValue>); overload;
 
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
@@ -187,14 +189,32 @@ end;
 
 constructor TMethodInfoWillExecute.Create(Proc: TProc);
 begin
+  Create(
+    function(Params: TArray<TValue>): TValue
+    begin
+      Proc;
+    end);
+end;
+
+constructor TMethodInfoWillExecute.Create(Proc: TFunc<TArray<TValue>, TValue>);
+begin
   inherited Create;
 
   FProc := Proc;
 end;
 
+constructor TMethodInfoWillExecute.Create(Proc: TProc<TArray<TValue>>);
+begin
+  Create(
+    function(Params: TArray<TValue>): TValue
+    begin
+      Proc(Params);
+    end);
+end;
+
 procedure TMethodInfoWillExecute.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
-  FProc;
+  Result := FProc(Params);
 end;
 
 { TMethodInfoWillReturn }
