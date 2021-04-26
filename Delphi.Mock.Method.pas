@@ -107,9 +107,10 @@ type
   private
     FProc: TFunc<TArray<TValue>, TValue>;
   public
+    constructor Create(Proc: TFunc<TValue>); overload;
+    constructor Create(Proc: TFunc<TArray<TValue>, TValue>); overload;
     constructor Create(Proc: TProc); overload;
     constructor Create(Proc: TProc<TArray<TValue>>); overload;
-    constructor Create(Proc: TFunc<TArray<TValue>, TValue>); overload;
 
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
@@ -209,6 +210,15 @@ begin
     function(Params: TArray<TValue>): TValue
     begin
       Proc(Params);
+    end);
+end;
+
+constructor TMethodInfoWillExecute.Create(Proc: TFunc<TValue>);
+begin
+  Create(
+    function(Params: TArray<TValue>): TValue
+    begin
+      Result := Proc;
     end);
 end;
 
