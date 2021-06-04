@@ -8,6 +8,8 @@ type
   [TestFixture]
   TItTest = class
   public
+    [SetupFixture]
+    procedure SetupFixture;
     [TearDown]
     procedure TearDown;
     [Test]
@@ -22,11 +24,27 @@ type
     procedure WhenPassTheParamIndexMustFillTheItParamsWithTheSizeExpected;
     [Test]
     procedure WhenPassTheParamIndexMustKeepTheLenghtOfGlobalVarWithTheBiggestValueIndex;
+    [Test]
+    procedure WhenConfigureTheItParamToCompareTheSameFieldsMustReturnTrueIfTheValuesOfTheFieldsAreTheSame;
+    [Test]
+    procedure WhenConfigureTheIfParamToCompareTheSamePropertiesMustReturnTrueIfTheValueOfThePropertiesAreTheSame;
+  end;
+
+  TMyClass = class
+  private
+    FMyProperty: String;
+    FMyProperty2: Integer;
+  public
+    MyField: String;
+    MyField2: Integer;
+
+    property MyProperty: String read FMyProperty write FMyProperty;
+    property MyProperty2: Integer read FMyProperty2 write FMyProperty2;
   end;
 
 implementation
 
-uses System.SysUtils, Delphi.Mock, Delphi.Mock.Method;
+uses System.SysUtils, System.Rtti, Delphi.Mock, Delphi.Mock.Method;
 
 { TItTest }
 
@@ -48,9 +66,42 @@ begin
   Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
 end;
 
+procedure TItTest.SetupFixture;
+begin
+  TRttiContext.Create.GetType(TMyClass).GetFields;
+end;
+
 procedure TItTest.TearDown;
 begin
   GItParams := nil;
+end;
+
+procedure TItTest.WhenConfigureTheIfParamToCompareTheSamePropertiesMustReturnTrueIfTheValueOfThePropertiesAreTheSame;
+begin
+  var MyClass := TMyClass.Create;
+  MyClass.MyProperty := 'abc';
+  MyClass.MyProperty2 := 1234;
+  var ValueIt := It;
+
+  ValueIt.SameProperties(MyClass);
+
+  Assert.IsTrue((ValueIt as IIt).Compare(MyClass));
+
+  MyClass.Free;
+end;
+
+procedure TItTest.WhenConfigureTheItParamToCompareTheSameFieldsMustReturnTrueIfTheValuesOfTheFieldsAreTheSame;
+begin
+  var MyClass := TMyClass.Create;
+  MyClass.MyField := 'abc';
+  MyClass.MyField2 := 1234;
+  var ValueIt := It;
+
+  ValueIt.SameFields(MyClass);
+
+  Assert.IsTrue((ValueIt as IIt).Compare(MyClass));
+
+  MyClass.Free;
 end;
 
 procedure TItTest.WhenIsAnyIsCreateAlwaysReturnTrue;
@@ -79,3 +130,4 @@ begin
 end;
 
 end.
+
