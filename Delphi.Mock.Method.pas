@@ -17,7 +17,7 @@ type
 
   EParamsRegisteredMismatch = class(Exception)
   public
-    constructor Create;
+    constructor Create(Method: TRttiMethod);
   end;
 
   ENonVirtualMethod = class(Exception)
@@ -27,7 +27,7 @@ type
 
   ERegisteredMethodsButDifferentParameters = class(Exception)
   public
-    constructor Create;
+    constructor Create(Method: TRttiMethod);
   end;
 
   IIt = interface
@@ -347,7 +347,7 @@ begin
     if Assigned(MethodExecute) then
       MethodExecute.Execute(Args, Result)
     else if not FMethodExpect.ContainsKey(Method) then
-      raise ERegisteredMethodsButDifferentParameters.Create
+      raise ERegisteredMethodsButDifferentParameters.Create(Method)
   end
   else if not FAutoMock then
     raise EMethodNotRegistered.Create(Method);
@@ -372,7 +372,7 @@ begin
       raise ENonVirtualMethod.Create(Method);
 
     if Length(GItParams) <> Length(Method.GetParameters) then
-      raise EParamsRegisteredMismatch.Create;
+      raise EParamsRegisteredMismatch.Create(Method);
 
     FMethodRegistering.ItParams := GItParams;
     FMethodRegistering.Method := Method;
@@ -441,14 +441,14 @@ end;
 
 constructor EParamsRegisteredMismatch.Create;
 begin
-  inherited Create('The procedure being called and the number of parameters registered is different!');
+  inherited CreateFmt('The called method %s and the number of parameters registered is different!', [Method.Name]);
 end;
 
 { ERegisteredMethodsButDifferentParameters }
 
-constructor ERegisteredMethodsButDifferentParameters.Create;
+constructor ERegisteredMethodsButDifferentParameters.Create(Method: TRttiMethod);
 begin
-  inherited Create('The called method is registered, but was not executed by parameter difference!');
+  inherited CreateFmt('The called method %s is registered, but was not executed by parameter difference!', [Method.Name]);
 end;
 
 { TMethodInfoCustomExpectation }
