@@ -5,6 +5,11 @@ interface
 uses System.Rtti, System.SysUtils, Delphi.Mock.Method, Delphi.Mock.Classes, Delphi.Mock.Intf;
 
 type
+  EInvalidTypeForComparision = class(Exception)
+  public
+    constructor Create;
+  end;
+
   TMock = class
   public
     class function CreateClass<T: class>(const ConstructorArgs: TArray<TValue> = nil; const AutoMock: Boolean = False): TMock<T>;
@@ -22,6 +27,7 @@ type
     function CompareEqualValue(const Value: TValue): Boolean;
     function CompareFieldsValues(const Value: TValue): Boolean;
     function ComparePropertiesValues(const Value: TValue): Boolean;
+    function CompareEqualValues(const Left, Right: TValue): Boolean;
   public
     function IsAny<T>: T;
     function IsEqualTo<T>(const Value: T): T;
@@ -80,7 +86,7 @@ end;
 
 function TIt.CompareEqualValue(const Value: TValue): Boolean;
 begin
-  Result := not (FValueToCompare.IsEmpty or Value.IsEmpty) and (FValueToCompare.AsVariant = Value.AsVariant);
+  Result := CompareEqualValues(FValueToCompare, Value);
 end;
 
 function TIt.CompareFieldsValues(const Value: TValue): Boolean;
@@ -88,7 +94,7 @@ begin
   var Context := TRttiContext.Create;
 
   for var Field in Context.GetType(FValueToCompare.TypeInfo).GetFields do
-    if Field.GetValue(FValueToCompare.AsObject).AsVariant <> Field.GetValue(Value.AsObject).AsVariant then
+    if not CompareEqualValues(Field.GetValue(FValueToCompare.AsObject), Field.GetValue(Value.AsObject)) then
       Exit(False);
 
   Result := True;
@@ -99,10 +105,47 @@ begin
   var Context := TRttiContext.Create;
 
   for var &Property in Context.GetType(FValueToCompare.TypeInfo).GetProperties do
-    if &Property.GetValue(FValueToCompare.AsObject).AsVariant <> &Property.GetValue(Value.AsObject).AsVariant then
+    if not CompareEqualValues(&Property.GetValue(FValueToCompare.AsObject), &Property.GetValue(Value.AsObject)) then
       Exit(False);
 
   Result := True;
+end;
+
+function TIt.CompareEqualValues(const Left, Right: TValue): Boolean;
+const
+  EQUIVALENT_TYPE: array[TTypeKind] of TTypeKind = (tkUnknown, tkInt64, tkString, tkEnumeration, tkFloat, tkString, tkSet, tkClass, tkUnknown, tkString, tkString, tkString,
+    tkVariant, tkArray, tkRecord, tkInterface, tkInt64, tkDynArray, tkString, tkClassRef, tkPointer, tkUnknown, tkMRecord);
+
+begin
+  Result := EQUIVALENT_TYPE[Left.Kind] = EQUIVALENT_TYPE[Right.Kind];
+
+  if Result then
+    case EQUIVALENT_TYPE[Left.Kind] of
+      tkEnumeration: Result := Left.AsOrdinal = Right.AsOrdinal;
+      tkInt64: Result := Left.AsInt64 = Right.AsInt64;
+      tkFloat: Result := Left.AsExtended = Right.AsExtended;
+      tkString: Result := Left.AsString = Right.AsString;
+      tkVariant: Result := Left.AsVariant = Right.AsVariant;
+      tkRecord:
+      begin
+        Result := (Left.TypeInfo = TypeInfo(TValue)) and (Right.TypeInfo = TypeInfo(TValue));
+
+        if Result then
+          Result := Left.AsType<TValue>.IsEmpty and Right.AsType<TValue>.IsEmpty or CompareEqualValues(Left.AsType<TValue>, Right.AsType<TValue>)
+        else
+          raise EInvalidTypeForComparision.Create;
+      end;
+      tkDynArray, tkArray:
+      begin
+        Result := Left.GetArrayLength = Right.GetArrayLength;
+
+        if Result then
+          for var A := 0 to Pred(Left.GetArrayLength) do
+            if not CompareEqualValues(Left.GetArrayElement(A), Right.GetArrayElement(A)) then
+              Exit(False);
+      end;
+      else Result := False;
+    end;
 end;
 
 function TIt.IsAny<T>: T;
@@ -114,7 +157,7 @@ end;
 function TIt.IsEqualTo<T>(const Value: T): T;
 begin
   FItCompare := EqualTo;
-  FValueToCompare := TValue.From(Value);
+  FValueToCompare := TValue.From<T>(Value);
   Result := Value;
 end;
 
@@ -137,6 +180,13 @@ begin
   FItCompare := HasSameProperties;
   FValueToCompare := TValue.From(Value);
   Result := Value;
+end;
+
+{ EInvalidTypeForComparision }
+
+constructor EInvalidTypeForComparision.Create;
+begin
+  inherited Create('The type for comparision is invalid!');
 end;
 
 end.
