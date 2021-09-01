@@ -43,6 +43,7 @@ type
     [TestCase('String', 'tkString')]
     [TestCase('Variant', 'tkVariant')]
     [TestCase('Value', 'tkRecord')]
+    [TestCase('Class', 'tkClass')]
     procedure WhenComparingValueMustReturnTrueIfTheValuesIsEqual(ValueKind: TTypeKind);
     [Test]
     procedure WhenTryToCompareARecordDiferentOfTValueMustRaiseAnError;
@@ -124,43 +125,59 @@ end;
 
 procedure TItTest.WhenComparingValueMustReturnTrueIfTheValuesIsEqual(ValueKind: TTypeKind);
 begin
+  var AnObject: TObject := nil;
   var ItValue := It;
   var Value: TValue;
 
   case ValueKind of
     tkEnumeration:
     begin
-      ItValue.IsEqualTo(Enum2);
       Value := TValue.From(Enum2);
+
+      ItValue.IsEqualTo(Enum2);
     end;
     tkInteger:
     begin
-      ItValue.IsEqualTo(123);
       Value := 123;
+
+      ItValue.IsEqualTo(123);
     end;
     tkFloat:
     begin
-      ItValue.IsEqualTo(123.456);
       Value := 123.456;
+
+      ItValue.IsEqualTo(123.456);
     end;
     tkString:
     begin
-      ItValue.IsEqualTo('abc');
       Value := 'abc';
+
+      ItValue.IsEqualTo('abc');
     end;
     tkVariant:
     begin
-      ItValue.IsEqualTo(Variant(123456));
       Value := TValue.From(Variant(123456));
+
+      ItValue.IsEqualTo(Variant(123456));
     end;
     tkRecord:
     begin
-      ItValue.IsEqualTo(TValue.From(123456789));
       Value := TValue.From(TValue.From(123456789));
+
+      ItValue.IsEqualTo(TValue.From(123456789));
+    end;
+    tkClass:
+    begin
+      AnObject := TObject.Create;
+      Value := TValue.From(AnObject);
+
+      ItValue.IsEqualTo(AnObject);
     end;
   end;
 
   Assert.IsTrue((ItValue as IIt).Compare(Value));
+
+  AnObject.Free;
 end;
 
 procedure TItTest.WhenComparinTValuesMustReturnTrueInTheComparisionIfBothIsEmpty;

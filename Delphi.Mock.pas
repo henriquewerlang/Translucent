@@ -121,6 +121,7 @@ begin
 
   if Result then
     case EQUIVALENT_TYPE[Left.Kind] of
+      tkClass: Result := Left.AsObject = Right.AsObject;
       tkEnumeration: Result := Left.AsOrdinal = Right.AsOrdinal;
       tkInt64: Result := Left.AsInt64 = Right.AsInt64;
       tkFloat: Result := Left.AsExtended = Right.AsExtended;
