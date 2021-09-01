@@ -325,29 +325,31 @@ procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<
         Exit(False);
   end;
 
-  function FindMethod(List: TDictionary<TRttiMethod, TList<IMethod>>): IMethod;
+  function FindMethod(List: TDictionary<TRttiMethod, TList<IMethod>>; var MethodRegistered: IMethod): Boolean;
   begin
-    Result := nil;
+    Result := List.ContainsKey(Method);
 
-    if List.ContainsKey(Method) then
-      for var MethodRegistered in List[Method] do
-        if SameParams(MethodRegistered.ItParams) then
-          Exit(MethodRegistered);
+    if Result then
+      for var Method in List[Method] do
+        if SameParams(Method.ItParams) then
+          MethodRegistered := Method;
   end;
 
 begin
-  if FMethodExecute.ContainsKey(Method) then
-  begin
-    var MethodExecute := FindMethod(FMethodExecute);
-    var MethodExpectation := FindMethod(FMethodExpect);
+  var MethodExecute, MethodExpectation: IMethod;
+  var MethodFound := FindMethod(FMethodExecute, MethodExecute);
 
-    if Assigned(MethodExpectation) and (MethodExpectation <> MethodExecute) then
+  MethodFound := FindMethod(FMethodExpect, MethodExpectation) or MethodFound;
+
+  if MethodFound then
+  begin
+    if Assigned(MethodExpectation) then
       MethodExpectation.Execute(Args, Result);
 
     if Assigned(MethodExecute) then
       MethodExecute.Execute(Args, Result)
     else if not FMethodExpect.ContainsKey(Method) then
-      raise ERegisteredMethodsButDifferentParameters.Create(Method)
+      raise ERegisteredMethodsButDifferentParameters.Create(Method);
   end
   else if not FAutoMock then
     raise EMethodNotRegistered.Create(Method);
@@ -363,6 +365,15 @@ begin
 end;
 
 procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);
+
+  procedure AddMethod(List: TDictionary<TRttiMethod, TList<IMethod>>);
+  begin
+    if not List.ContainsKey(Method) then
+      List.Add(Method, TList<IMethod>.Create);
+
+    List[Method].Add(FMethodRegistering);
+  end;
+
 begin
   try
     if not Assigned(FMethodRegistering) then
@@ -378,17 +389,9 @@ begin
     FMethodRegistering.Method := Method;
 
     if Supports(FMethodRegistering, IMethodExpect) then
-    begin
-      if not FMethodExpect.ContainsKey(Method) then
-        FMethodExpect.Add(Method, TList<IMethod>.Create);
-
-      FMethodExpect[Method].Add(FMethodRegistering);
-    end;
-
-    if not FMethodExecute.ContainsKey(Method) then
-      FMethodExecute.Add(Method, TList<IMethod>.Create);
-
-    FMethodExecute[Method].Add(FMethodRegistering);
+      AddMethod(FMethodExpect)
+    else
+      AddMethod(FMethodExecute);
 
     FMethodRegistering := nil;
   finally
