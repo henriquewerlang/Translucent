@@ -5,6 +5,11 @@ interface
 uses System.SysUtils, System.Rtti, System.Generics.Collections;
 
 type
+  TFunctionInvoke = reference to function: TValue;
+  TFunctionInvokeParams = reference to function (const Args: TArray<TValue>): TValue;
+  TProcedureInvoke = reference to procedure;
+  TProcedureInvokeParams = reference to procedure(const Args: TArray<TValue>);
+
   EDidNotCallTheStartRegister = class(Exception)
   public
     constructor Create;
@@ -103,14 +108,17 @@ type
     property Method: TRttiMethod read GetMethod write SetMethod;
   end;
 
+  TExecuteProcedure = reference to procedure(const Args: TArray<TValue>; out Result: TValue);
+
   TMethodInfoWillExecute = class(TMethodInfo, IMethod)
   private
-    FProc: TFunc<TArray<TValue>, TValue>;
+    FExecuteProcedure: TExecuteProcedure;
   public
-    constructor Create(Proc: TFunc<TValue>); overload;
-    constructor Create(Proc: TFunc<TArray<TValue>, TValue>); overload;
-    constructor Create(Proc: TProc); overload;
-    constructor Create(Proc: TProc<TArray<TValue>>); overload;
+    constructor Create(const Execute: TExecuteProcedure); overload;
+    constructor Create(const Func: TFunctionInvoke); overload;
+    constructor Create(const Func: TFunctionInvokeParams); overload;
+    constructor Create(const Proc: TProcedureInvoke); overload;
+    constructor Create(const Proc: TProcedureInvokeParams); overload;
 
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
@@ -188,43 +196,52 @@ end;
 
 { TMethodInfoWillExecute }
 
-constructor TMethodInfoWillExecute.Create(Proc: TProc);
+constructor TMethodInfoWillExecute.Create(const Execute: TExecuteProcedure);
+begin
+  inherited Create;
+
+  FExecuteProcedure := Execute;
+end;
+
+constructor TMethodInfoWillExecute.Create(const Func: TFunctionInvoke);
 begin
   Create(
-    function(Params: TArray<TValue>): TValue
+    procedure(const Args: TArray<TValue>; out Result: TValue)
+    begin
+      Result := Func;
+    end);
+end;
+
+constructor TMethodInfoWillExecute.Create(const Func: TFunctionInvokeParams);
+begin
+  Create(
+    procedure(const Args: TArray<TValue>; out Result: TValue)
+    begin
+      Result := Func(Args);
+    end);
+end;
+
+constructor TMethodInfoWillExecute.Create(const Proc: TProcedureInvoke);
+begin
+  Create(
+    procedure(const Args: TArray<TValue>; out Result: TValue)
     begin
       Proc;
     end);
 end;
 
-constructor TMethodInfoWillExecute.Create(Proc: TFunc<TArray<TValue>, TValue>);
-begin
-  inherited Create;
-
-  FProc := Proc;
-end;
-
-constructor TMethodInfoWillExecute.Create(Proc: TProc<TArray<TValue>>);
+constructor TMethodInfoWillExecute.Create(const Proc: TProcedureInvokeParams);
 begin
   Create(
-    function(Params: TArray<TValue>): TValue
+    procedure(const Args: TArray<TValue>; out Result: TValue)
     begin
-      Proc(Params);
-    end);
-end;
-
-constructor TMethodInfoWillExecute.Create(Proc: TFunc<TValue>);
-begin
-  Create(
-    function(Params: TArray<TValue>): TValue
-    begin
-      Result := Proc;
+      Proc(Args);
     end);
 end;
 
 procedure TMethodInfoWillExecute.Execute(const Params: TArray<TValue>; out Result: TValue);
 begin
-  Result := FProc(Params);
+  FExecuteProcedure(Params, Result);
 end;
 
 { TMethodInfoWillReturn }
@@ -318,10 +335,11 @@ procedure TMethodRegister.ExecuteMethod(Method: TRttiMethod; const Args: TArray<
 
   function SameParams(const ItParams: TArray<IIt>): Boolean;
   begin
+    var Fixup := High(Args) - High(ItParams);
     Result := True;
 
-    for var A := Low(Args) to High(Args) do
-      if not ItParams[A].Compare(Args[A]) then
+    for var A := Low(ItParams) to High(ItParams) do
+      if not ItParams[A].Compare(Args[A + Fixup]) then
         Exit(False);
   end;
 

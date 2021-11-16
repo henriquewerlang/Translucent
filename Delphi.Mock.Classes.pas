@@ -50,7 +50,7 @@ type
 
   TMockSetup<T: class> = class(TMockSetupCommon<T>)
   public
-    function WillExecute(Proc: TProc): TMockSetupWhen<T>;
+    function WillExecute(const Proc: TProcedureInvoke): TMockSetupWhen<T>;
     function WillReturn(const Value: TValue): TMockSetupWhen<T>;
   end;
 
@@ -127,7 +127,7 @@ end;
 
 { TMockSetup<T> }
 
-function TMockSetup<T>.WillExecute(Proc: TProc): TMockSetupWhen<T>;
+function TMockSetup<T>.WillExecute(const Proc: TProcedureInvoke): TMockSetupWhen<T>;
 begin
   Result := FMockSetupWhen;
 

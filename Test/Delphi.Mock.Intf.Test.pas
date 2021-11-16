@@ -86,7 +86,7 @@ begin
   var Mock := TMock.CreateInterface<IMyInterface>;
 
   Mock.Setup.WillExecute(
-    function(Params: TArray<TValue>): TValue
+    function(const Params: TArray<TValue>): TValue
     begin
       Executed := True;
     end).When.Execute;
@@ -118,7 +118,7 @@ begin
   var Mock := TMock.CreateInterface<IMyInterface>;
 
   Mock.Setup.WillExecute(
-    procedure(Params: TArray<TValue>)
+    procedure(const Params: TArray<TValue>)
     begin
       Executed := True;
     end).When.Execute;
