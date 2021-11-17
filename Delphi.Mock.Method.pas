@@ -2,7 +2,7 @@ unit Delphi.Mock.Method;
 
 interface
 
-uses System.SysUtils, System.Rtti, System.Generics.Collections;
+uses System.SysUtils, System.Rtti, System.Generics.Collections, Delphi.Mock.It;
 
 type
   TFunctionInvoke = reference to function: TValue;
@@ -33,11 +33,6 @@ type
   ERegisteredMethodsButDifferentParameters = class(Exception)
   public
     constructor Create(Method: TRttiMethod);
-  end;
-
-  IIt = interface
-    ['{5B034A6E-3953-4A0A-9A3A-6805210E082E}']
-    function Compare(const Value: TValue): Boolean;
   end;
 
   IMethod = interface
@@ -184,15 +179,7 @@ type
     procedure Execute(const Params: TArray<TValue>; out Result: TValue);
   end;
 
-var
-  GItParams: TArray<IIt> = nil;
-
 implementation
-
-procedure ResetGlobalItParams;
-begin
-  GItParams := nil;
-end;
 
 { TMethodInfoWillExecute }
 
@@ -400,10 +387,10 @@ begin
     if not (Method.DispatchKind in [dkVtable, dkDynamic, dkInterface]) then
       raise ENonVirtualMethod.Create(Method);
 
-    if Length(GItParams) <> Length(Method.GetParameters) then
+    if TItParams.Params.Count <> Length(Method.GetParameters) then
       raise EParamsRegisteredMismatch.Create(Method);
 
-    FMethodRegistering.ItParams := GItParams;
+    FMethodRegistering.ItParams := TItParams.Params.ToArray;
     FMethodRegistering.Method := Method;
 
     if Supports(FMethodRegistering, IMethodExpect) then
@@ -413,7 +400,7 @@ begin
 
     FMethodRegistering := nil;
   finally
-    ResetGlobalItParams;
+    TItParams.ResetParams;
   end;
 end;
 

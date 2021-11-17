@@ -23,7 +23,8 @@ uses
   Delphi.Mock.Intf in '..\Delphi.Mock.Intf.pas',
   Delphi.Mock.Classes.Test in 'Delphi.Mock.Classes.Test.pas',
   Delphi.Mock.Intf.Test in 'Delphi.Mock.Intf.Test.pas',
-  Delphi.Mock.Method.Test in 'Delphi.Mock.Method.Test.pas';
+  Delphi.Mock.Method.Test in 'Delphi.Mock.Method.Test.pas',
+  Delphi.Mock.It in '..\Delphi.Mock.It.pas';
 
 //Just to not remove de IFDEF
 {$IFNDEF TESTINSIGHT}

@@ -2,59 +2,144 @@ unit Delphi.Mock.It.Test;
 
 interface
 
-uses DUnitX.TestFramework;
+uses DUnitX.TestFramework, Delphi.Mock.It;
 
 type
   [TestFixture]
-  TItTest = class
+  TItParamsTest = class
+  public
+    [Test]
+    procedure WhenCallClearParamsMustResetTheGlobalVarOfParams;
+    [Test]
+    procedure WhenAddAParamMustAddTheItParamInTheListOfParams;
+    [Test]
+    procedure WhenAddAParamWithAParamIndexFilledMustFillAllThePositionsTheListReachTheValueInParamIndex;
+    [Test]
+    procedure WhenTheParamIndexIsLowerThenTheCountOfParamsCantChangeTheParamListCount;
+    [Test]
+    procedure WhenAddAParamWithAParamIndexFilledMustAddTheParamAtThatPosition;
+    [Test]
+    procedure AfterInsertAParamMustResetTheParamIndexValue;
+    [Test]
+    procedure IfTheParamIndexNotFilledMustAddTheParamInTheEndOfTheList;
+  end;
+
+  [TestFixture]
+  TItParamTest = class
   public
     [SetupFixture]
     procedure SetupFixture;
-    [TearDown]
-    procedure TearDown;
     [Test]
-    procedure WhenIsAnyIsCreateAlwaysReturnTrue;
-    [TestCase('EqualValue', '123,True')]
-    [TestCase('DiferentValue', '456,False')]
-    procedure ComparingEqualValueOnlyReturnTrueWhenIsEqual(Value: Integer; Comparision: Boolean);
-    [TestCase('EqualValue', '123,False')]
-    [TestCase('DiferentValue', '456,True')]
-    procedure ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
+    procedure IfComparingWithAnyAlwaysReturnTrue;
+    [TestCase('Equal, same value', '123,True')]
+    [TestCase('Equal, different value', '456,False')]
+    procedure IfComparingEqualMustReturnTrueOnlyIfIsTheSameValue(const Value: Integer; const ExpectedResult: Boolean);
+    [TestCase('Not equal, same value', '123,False')]
+    [TestCase('Not equal, different value', '456,True')]
+    procedure IfComparingNotEqualMustReturnTrueOnlyIfIsDifferentValue(const Value: Integer; const ExpectedResult: Boolean);
     [Test]
-    procedure WhenPassTheParamIndexMustFillTheItParamsWithTheSizeExpected;
+    procedure WhenComparingDifferentTypesOfValuesMustRaiseAnError;
+    [TestCase('kInteger', 'tkInteger')]
+    [TestCase('tkChar', 'tkChar')]
+    [TestCase('tkEnumeration', 'tkEnumeration')]
+    [TestCase('tkFloat', 'tkFloat')]
+    [TestCase('tkString', 'tkString')]
+    [TestCase('tkSet', 'tkSet')]
+    [TestCase('tkClass', 'tkClass')]
+    [TestCase('tkMethod', 'tkMethod')]
+    [TestCase('tkWChar', 'tkWChar')]
+    [TestCase('tkLString', 'tkLString')]
+    [TestCase('tkWString', 'tkWString')]
+    [TestCase('tkVariant', 'tkVariant')]
+    [TestCase('tkArray', 'tkArray')]
+    [TestCase('tkRecord', 'tkRecord')]
+    [TestCase('tkInterface', 'tkInterface')]
+    [TestCase('tkInt64', 'tkInt64')]
+    [TestCase('tkDynArray', 'tkDynArray')]
+    [TestCase('tkUString', 'tkUString')]
+    [TestCase('tkClassRef', 'tkClassRef')]
+    [TestCase('tkPointer', 'tkPointer')]
+    [TestCase('tkProcedure', 'tkProcedure')]
+    [TestCase('tkMRecord', 'tkMRecord')]
+    procedure TestCompareByType(const TypeKind: TTypeKind);
     [Test]
-    procedure WhenPassTheParamIndexMustKeepTheLenghtOfGlobalVarWithTheBiggestValueIndex;
+    procedure WhenCompareArrayWithDifferentLengthMustReturnFalseWhenComparingValues;
     [Test]
-    procedure WhenConfigureTheItParamToCompareTheSameFieldsMustReturnTrueIfTheValuesOfTheFieldsAreTheSame;
+    procedure WhenCompareArrayAndAllValuesIsEqualMustReturnTrueInTheComparision;
     [Test]
-    procedure WhenConfigureTheIfParamToCompareTheSamePropertiesMustReturnTrueIfTheValueOfThePropertiesAreTheSame;
+    procedure WhenCompareArrayAndAValueIsNotEqualMustReturnFalseInTheComparision;
     [Test]
-    procedure WhenTheTypeOfItValuesAreDifferentTheComparisionMustReturnFalse;
-    [TestCase('Integer-Int64', 'tkInteger,tkInt64')]
-    [TestCase('Int64-Integer', 'tkInt64,tkInteger')]
-    [TestCase('Char-String', 'tkChar,tkString')]
-    [TestCase('String-Char', 'tkString,tkChar')]
-    [TestCase('WChar-String', 'tkWChar,tkString')]
-    [TestCase('String-WChar', 'tkString,tkWChar')]
-    procedure WhenTheTypesAreEquivalentMustCompareTheValuesAsExpected(LeftValueKind, RightValueKind: TTypeKind);
-    [TestCase('Enum', 'tkEnumeration')]
-    [TestCase('Float', 'tkFloat')]
-    [TestCase('Integer', 'tkInteger')]
-    [TestCase('String', 'tkString')]
-    [TestCase('Variant', 'tkVariant')]
-    [TestCase('Value', 'tkRecord')]
-    [TestCase('Class', 'tkClass')]
-    procedure WhenComparingValueMustReturnTrueIfTheValuesIsEqual(ValueKind: TTypeKind);
+    procedure WhenComparingFieldsMustReturnFalseIfOneFieldHasADifferentValue;
     [Test]
-    procedure WhenTryToCompareARecordDiferentOfTValueMustRaiseAnError;
+    procedure WhenComparingFieldsMustReturnTrueIfAllFieldsHasASameValue;
     [Test]
-    procedure WhenCantCompareValuesMustReturnFalseInTheComparision;
+    procedure WhenComparingPropertiesMustReturnFalseIfOnePropertyHasADifferentValue;
     [Test]
-    procedure WhenComparinTValuesMustReturnTrueInTheComparisionIfBothIsEmpty;
+    procedure WhenComparingPropertiesMustReturnTrueIfAllPropertiesHasASameValue;
     [Test]
-    procedure WhenComparingArraysAndTheSizeOfBothIsDifferentMustReturnFalseInTheComparision;
+    procedure WhenComparingFieldsAndTheComparedValueIsNilMustReturnFalseInTheComparision;
     [Test]
-    procedure WhenTheArraysHasTheSameLengthMustComparaEveryValueInTheArray;
+    procedure WhenComparingFieldsAndTheCurrentValueIsNilMustReturnFalseInTheComparision;
+    [Test]
+    procedure WhenComparingPropertiesAndTheComparedValueIsNilMustReturnFalseInTheComparision;
+    [Test]
+    procedure WhenComparingPropertiesAndTheCurrentValueIsNilMustReturnFalseInTheComparision;
+    [Test]
+    procedure WhenComparingAnInvalidTypeMustRaiseAnError;
+    [Test]
+    procedure WhenComparingTValuesAndBothAreEmptyMustReturnTrueInTheComparision;
+    [Test]
+    procedure WhenComparingATValueAndTheCurrentValueIsEmptyTheReturnOfTheComparationMustBeFalse;
+    [Test]
+    procedure WhenComparingATValueAndTheValueToCompareIsEmptyTheReturnOfTheComparationMustBeFalse;
+    [Test]
+    procedure WhenComparingTwoClassesMustRaiseAnErrorIfTheTypesAreDiffent;
+    [Test]
+    procedure WhenComparingTwoRecordsMustRaiseAnErrorIfTheTypesAreDiffent;
+    [Test]
+    procedure WhenTheValueBeenComparedIsInheritedFromTheCurrentValueCantRaiseErrorOfDiffentType;
+  end;
+
+  [TestFixture]
+  TItTest = class
+  private
+    procedure MakeTest<T>(const Comparision: TItComparision; const ReturnFunctionValue, ValueToCompare: T);
+  public
+    [SetupFixture]
+    procedure SetupFixture;
+    [Test]
+    procedure IsAnyAllTests;
+    [Test]
+    procedure IsEqualToAllTests;
+    [Test]
+    procedure IsNotEqualToAllTests;
+    [Test]
+    procedure SameFieldsToAllTests;
+    [Test]
+    procedure SamePropertiesToAllTests;
+    [Test]
+    procedure WhenUseTheParamIndexInTheItCallMustLoadTheParamIndexWithThatValue;
+  end;
+
+  [TestFixture]
+  TItReferenceTest = class
+  private
+    procedure MakeTest<T>(const Comparision: TItComparision; const ItParam: TItParam<T>; const ValueToCompare: T);
+  public
+    [SetupFixture]
+    procedure SetupFixture;
+    [Test]
+    procedure IsAnyAllTests;
+    [Test]
+    procedure IsEqualToAllTests;
+    [Test]
+    procedure IsNotEqualToAllTests;
+    [Test]
+    procedure SameFieldsToAllTests;
+    [Test]
+    procedure SamePropertiesToAllTests;
+    [Test]
+    procedure WhenUseTheParamIndexInTheItCallMustLoadTheParamIndexWithThatValue;
   end;
 
   TMyClass = class
@@ -69,30 +154,491 @@ type
     property MyProperty2: Integer read FMyProperty2 write FMyProperty2;
   end;
 
+  TMyClass2 = class(TMyClass)
+
+  end;
+
+  TMyRecord = record
+  end;
+
   TMyEnumerator = (Enum1, Enum2, Enum3);
+  TMyEnumerators = set of TMyEnumerator;
 
 implementation
 
-uses System.SysUtils, System.Rtti, Delphi.Mock, Delphi.Mock.Method;
+uses System.Rtti, System.SysUtils, Delphi.Mock;
+
+{ TItParamsTest }
+
+procedure TItParamsTest.AfterInsertAParamMustResetTheParamIndexValue;
+begin
+  TItParams.ParamIndex := 3;
+
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.AreEqual(-1, TItParams.ParamIndex);
+
+  TItParams.ResetParams;
+end;
+
+procedure TItParamsTest.IfTheParamIndexNotFilledMustAddTheParamInTheEndOfTheList;
+begin
+  TItParams.Params.Count := 10;
+
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.IsNotNull(TItParams.Params[10]);
+
+  TItParams.ResetParams;
+end;
+
+procedure TItParamsTest.WhenAddAParamMustAddTheItParamInTheListOfParams;
+begin
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.AreEqual(1, TItParams.Params.Count);
+
+  TItParams.ResetParams;
+end;
+
+procedure TItParamsTest.WhenAddAParamWithAParamIndexFilledMustAddTheParamAtThatPosition;
+begin
+  TItParams.ParamIndex := 3;
+  TItParams.Params.Count := 5;
+
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.IsNotNull(TItParams.Params[3]);
+
+  TItParams.ResetParams;
+end;
+
+procedure TItParamsTest.WhenAddAParamWithAParamIndexFilledMustFillAllThePositionsTheListReachTheValueInParamIndex;
+begin
+  TItParams.ParamIndex := 3;
+
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.AreEqual(4, TItParams.Params.Count);
+
+  TItParams.ResetParams;
+end;
+
+procedure TItParamsTest.WhenCallClearParamsMustResetTheGlobalVarOfParams;
+begin
+  TItParams.Params.Count := 20;
+
+  TItParams.ResetParams;
+
+  Assert.AreEqual(0, TItParams.Params.Count);
+end;
+
+procedure TItParamsTest.WhenTheParamIndexIsLowerThenTheCountOfParamsCantChangeTheParamListCount;
+begin
+  TItParams.Params.Count := 10;
+  TItParams.ParamIndex := 3;
+
+  TItParams.AddParam(TItParam<Integer>.Create(icAny, 0));
+
+  Assert.AreEqual(10, TItParams.Params.Count);
+
+  TItParams.ResetParams;
+end;
+
+{ TItParamTest }
+
+procedure TItParamTest.IfComparingEqualMustReturnTrueOnlyIfIsTheSameValue(const Value: Integer; const ExpectedResult: Boolean);
+begin
+  var ItParam: IIt := TItParam<Integer>.Create(icEqualTo, 123);
+
+  Assert.AreEqual(ExpectedResult, ItParam.Compare(Value));
+end;
+
+procedure TItParamTest.IfComparingNotEqualMustReturnTrueOnlyIfIsDifferentValue(const Value: Integer; const ExpectedResult: Boolean);
+begin
+  var ItParam: IIt := TItParam<Integer>.Create(icNotEqualTo, 123);
+
+  Assert.AreEqual(ExpectedResult, ItParam.Compare(Value));
+end;
+
+procedure TItParamTest.IfComparingWithAnyAlwaysReturnTrue;
+begin
+  var ItParam: IIt := TItParam<Integer>.Create(icAny, 0);
+
+  Assert.IsTrue(ItParam.Compare(123));
+end;
+
+procedure TItParamTest.SetupFixture;
+begin
+  TRttiContext.Create.GetType(TMyClass).GetFields;
+end;
+
+procedure TItParamTest.TestCompareByType(const TypeKind: TTypeKind);
+const
+  IT_COMPARISION: array[0..2] of TItComparision = (icEqualTo, icNotEqualTo, icAny);
+  IT_COMPARISION_MESSAGE: array[0..2] of String = ('equal to', 'not equal to', 'any');
+  IT_COMPARISION_RESULT_EXPECTED: array[0..2] of Boolean = (False, True, True);
+
+begin
+  var ItParam: IIt;
+  var ValueToCompare: TValue;
+
+  for var A := Low(IT_COMPARISION) to High(IT_COMPARISION) do
+  begin
+    case TypeKind of
+      tkInteger:
+      begin
+        ItParam := TItParam<Integer>.Create(IT_COMPARISION[A], 123);
+        ValueToCompare := TValue.From<Integer>(456);
+      end;
+      tkChar:
+      begin
+        ItParam := TItParam<AnsiChar>.Create(IT_COMPARISION[A], 'X');
+        ValueToCompare := TValue.From<AnsiChar>('Y');
+      end;
+      tkEnumeration:
+      begin
+        ItParam := TItParam<TMyEnumerator>.Create(IT_COMPARISION[A], Enum2);
+        ValueToCompare := TValue.From<TMyEnumerator>(Enum3);
+      end;
+      tkFloat:
+      begin
+        ItParam := TItParam<Double>.Create(IT_COMPARISION[A], 123.456);
+        ValueToCompare := TValue.From<Double>(789.012);
+      end;
+      tkString:
+      begin
+        ItParam := TItParam<ShortString>.Create(IT_COMPARISION[A], 'ABC');
+        ValueToCompare := TValue.From<ShortString>('DEF');
+      end;
+      tkSet:
+      begin
+        ItParam := TItParam<TMyEnumerators>.Create(IT_COMPARISION[A], [Enum1, Enum2]);
+        ValueToCompare := TValue.From<TMyEnumerators>([Enum2, Enum3]);
+      end;
+      tkClass:
+      begin
+        ItParam := TItParam<TItParamTest>.Create(IT_COMPARISION[A], Self);
+        ValueToCompare := TValue.From<TItParamTest>(nil);
+      end;
+      tkWChar:
+      begin
+        ItParam := TItParam<Char>.Create(IT_COMPARISION[A], 'X');
+        ValueToCompare := TValue.From<Char>('Y');
+      end;
+      tkLString:
+      begin
+        ItParam := TItParam<AnsiString>.Create(IT_COMPARISION[A], 'ABC');
+        ValueToCompare := TValue.From<AnsiString>('DEF');
+      end;
+      tkWString:
+      begin
+        ItParam := TItParam<WideString>.Create(IT_COMPARISION[A], 'ABC');
+        ValueToCompare := TValue.From<WideString>('DEF');
+      end;
+      tkVariant:
+      begin
+        ItParam := TItParam<Variant>.Create(IT_COMPARISION[A], 'ABC');
+        ValueToCompare := TValue.From<Variant>('DEF');
+      end;
+      tkInt64:
+      begin
+        ItParam := TItParam<Int64>.Create(IT_COMPARISION[A], 123);
+        ValueToCompare := TValue.From<Int64>(456);
+      end;
+      tkUString:
+      begin
+        ItParam := TItParam<UnicodeString>.Create(IT_COMPARISION[A], 'ABC');
+        ValueToCompare := TValue.From<UnicodeString>('DEF');
+      end;
+      tkPointer:
+      begin
+        ItParam := TItParam<Pointer>.Create(IT_COMPARISION[A], Pointer(10));
+        ValueToCompare := TValue.From<Pointer>(Pointer(20));
+      end;
+      tkRecord:
+      begin
+        ItParam := TItParam<TValue>.Create(IT_COMPARISION[A], 123);
+        ValueToCompare := TValue.From<TValue>(456);
+      end;
+      tkArray,
+      tkClassRef,
+      tkDynArray,
+      tkInterface,
+      tkMethod,
+      tkMRecord,
+      tkProcedure,
+      tkUnknown:
+      begin
+        Assert.IsTrue(True);
+
+        Exit;
+      end;
+    end;
+
+    Assert.AreEqual(IT_COMPARISION_RESULT_EXPECTED[A], ItParam.Compare(ValueToCompare), Format('Comparision fail "%s"', [IT_COMPARISION_MESSAGE[A]]));
+  end;
+end;
+
+procedure TItParamTest.WhenCompareArrayAndAllValuesIsEqualMustReturnTrueInTheComparision;
+begin
+  var ItParam: IIt := TItParam<TArray<Integer>>.Create(icEqualTo, [123, 456]);
+
+  Assert.IsTrue(ItParam.Compare(TValue.From<TArray<Integer>>([123, 456])));
+end;
+
+procedure TItParamTest.WhenCompareArrayAndAValueIsNotEqualMustReturnFalseInTheComparision;
+begin
+  var ItParam: IIt := TItParam<TArray<Integer>>.Create(icEqualTo, [123, 456]);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TArray<Integer>>([123, 444])));
+end;
+
+procedure TItParamTest.WhenCompareArrayWithDifferentLengthMustReturnFalseWhenComparingValues;
+begin
+  var ItParam: IIt := TItParam<TArray<Integer>>.Create(icEqualTo, [123, 456]);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TArray<Integer>>([123])));
+end;
+
+procedure TItParamTest.WhenComparingAnInvalidTypeMustRaiseAnError;
+begin
+  var ItParam: IIt := TItParam<TGUID>.Create(icEqualTo, TGUID.NewGuid);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      ItParam.Compare(TValue.From(TGUID.NewGuid));
+    end, EInvalidTypeToItParam)
+end;
+
+procedure TItParamTest.WhenComparingATValueAndTheCurrentValueIsEmptyTheReturnOfTheComparationMustBeFalse;
+begin
+  var ItParam: IIt := TItParam<TValue>.Create(icEqualTo, TValue.Empty);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From(TValue.From(123))));
+end;
+
+procedure TItParamTest.WhenComparingATValueAndTheValueToCompareIsEmptyTheReturnOfTheComparationMustBeFalse;
+begin
+  var ItParam: IIt := TItParam<TValue>.Create(icEqualTo, 123);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From(TValue.Empty)));
+end;
+
+procedure TItParamTest.WhenComparingDifferentTypesOfValuesMustRaiseAnError;
+begin
+  var ItParam: IIt := TItParam<Integer>.Create(icAny, 0);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      ItParam.Compare('abc');
+    end, EDifferentTypeInComparision);
+end;
+
+procedure TItParamTest.WhenComparingFieldsAndTheComparedValueIsNilMustReturnFalseInTheComparision;
+begin
+  var CompareValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameFields, CompareValue);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TMyClass>(nil)));
+
+  CompareValue.Free;
+end;
+
+procedure TItParamTest.WhenComparingFieldsAndTheCurrentValueIsNilMustReturnFalseInTheComparision;
+begin
+  var CompareValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameFields, nil);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TMyClass>(CompareValue)));
+
+  CompareValue.Free;
+end;
+
+procedure TItParamTest.WhenComparingFieldsMustReturnFalseIfOneFieldHasADifferentValue;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameFields, CurrentValue);
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyField := 'abc';
+  ValueToCompare.MyField := 'def';
+
+  Assert.IsFalse(ItParam.Compare(TValue.From(ValueToCompare)));
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
+end;
+
+procedure TItParamTest.WhenComparingFieldsMustReturnTrueIfAllFieldsHasASameValue;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameFields, CurrentValue);
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyField := 'abc';
+  ValueToCompare.MyField := 'abc';
+
+  Assert.IsTrue(ItParam.Compare(TValue.From(ValueToCompare)));
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
+end;
+
+procedure TItParamTest.WhenComparingPropertiesAndTheComparedValueIsNilMustReturnFalseInTheComparision;
+begin
+  var CompareValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameProperties, CompareValue);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TMyClass>(nil)));
+
+  CompareValue.Free;
+end;
+
+procedure TItParamTest.WhenComparingPropertiesAndTheCurrentValueIsNilMustReturnFalseInTheComparision;
+begin
+  var CompareValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameProperties, nil);
+
+  Assert.IsFalse(ItParam.Compare(TValue.From<TMyClass>(CompareValue)));
+
+  CompareValue.Free;
+end;
+
+procedure TItParamTest.WhenComparingPropertiesMustReturnFalseIfOnePropertyHasADifferentValue;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameProperties, CurrentValue);
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyProperty := 'abc';
+  ValueToCompare.MyProperty := 'def';
+
+  Assert.IsFalse(ItParam.Compare(TValue.From(ValueToCompare)));
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
+end;
+
+procedure TItParamTest.WhenComparingPropertiesMustReturnTrueIfAllPropertiesHasASameValue;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ItParam: IIt := TItParam<TMyClass>.Create(icSameProperties, CurrentValue);
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyProperty := 'abc';
+  ValueToCompare.MyProperty := 'abc';
+
+  Assert.IsTrue(ItParam.Compare(TValue.From(ValueToCompare)));
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
+end;
+
+procedure TItParamTest.WhenComparingTValuesAndBothAreEmptyMustReturnTrueInTheComparision;
+begin
+  var ItParam: IIt := TItParam<TValue>.Create(icEqualTo, TValue.Empty);
+
+  Assert.IsTrue(ItParam.Compare(TValue.From(TValue.Empty)));
+end;
+
+procedure TItParamTest.WhenComparingTwoClassesMustRaiseAnErrorIfTheTypesAreDiffent;
+begin
+  var ItParam: IIt := TItParam<TMyClass>.Create(icEqualTo, nil);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      ItParam.Compare(Self);
+    end, EDifferentTypeInComparision);
+end;
+
+procedure TItParamTest.WhenComparingTwoRecordsMustRaiseAnErrorIfTheTypesAreDiffent;
+begin
+  var MyRecord: TMyRecord;
+
+  var ItParam: IIt := TItParam<TMyRecord>.Create(icEqualTo, MyRecord);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      ItParam.Compare(TValue.From(TGUID.NewGuid));
+    end, EDifferentTypeInComparision);
+end;
+
+procedure TItParamTest.WhenTheValueBeenComparedIsInheritedFromTheCurrentValueCantRaiseErrorOfDiffentType;
+begin
+  var ItParam: IIt := TItParam<TMyClass>.Create(icEqualTo, nil);
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      ItParam.Compare(TValue.From<TMyClass2>(nil));
+    end, EDifferentTypeInComparision);
+end;
 
 { TItTest }
 
-procedure TItTest.ComparingEqualValueOnlyReturnTrueWhenIsEqual(Value: Integer; Comparision: Boolean);
+procedure TItTest.IsAnyAllTests;
 begin
-  var ValueIt := It;
-
-  ValueIt.IsEqualTo(123);
-
-  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
+  MakeTest<Integer>(icAny, It.IsAny<Integer>, 0);
 end;
 
-procedure TItTest.ComparingNotEqualValueOnlyReturnTrueWhenIsNotEqual(Value: Integer; Comparision: Boolean);
+procedure TItTest.IsEqualToAllTests;
 begin
-  var ValueIt := It;
+  MakeTest<Integer>(icEqualTo, It.IsEqualTo<Integer>(123), 123);
+end;
 
-  ValueIt.IsNotEqualTo(123);
+procedure TItTest.IsNotEqualToAllTests;
+begin
+  MakeTest<Integer>(icNotEqualTo, It.IsNotEqualTo<Integer>(123), 456);
+end;
 
-  Assert.AreEqual(Comparision, (ValueIt as IIt).Compare(Value));
+procedure TItTest.MakeTest<T>(const Comparision: TItComparision; const ReturnFunctionValue, ValueToCompare: T);
+begin
+  Assert.AreEqual(1, TItParams.Params.Count, 'Don''t call the add param');
+
+  Assert.AreEqual(Comparision, TItParam<T>(TItParams.Params.First).ItComparision, 'Not the same comparision');
+
+  Assert.IsTrue(TItParams.Params.First.Compare(TValue.From(ValueToCompare)), 'The value comparision failed');
+
+  TItParams.ResetParams;
+end;
+
+procedure TItTest.SameFieldsToAllTests;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyField := 'abc';
+  ValueToCompare.MyField := 'abc';
+
+  MakeTest<TMyClass>(icSameFields, It.SameFields(CurrentValue), ValueToCompare);
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
+end;
+
+procedure TItTest.SamePropertiesToAllTests;
+begin
+  var CurrentValue := TMyClass.Create;
+  var ValueToCompare := TMyClass.Create;
+
+  CurrentValue.MyProperty := 'abc';
+  ValueToCompare.MyProperty := 'abc';
+
+  MakeTest<TMyClass>(icSameProperties, It.SameProperties(CurrentValue), ValueToCompare);
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
 end;
 
 procedure TItTest.SetupFixture;
@@ -100,201 +646,87 @@ begin
   TRttiContext.Create.GetType(TMyClass).GetFields;
 end;
 
-procedure TItTest.TearDown;
+procedure TItTest.WhenUseTheParamIndexInTheItCallMustLoadTheParamIndexWithThatValue;
 begin
-  GItParams := nil;
+  It(10);
+
+  Assert.AreEqual(10, TItParams.ParamIndex);
+
+  TItParams.ParamIndex := -1;
 end;
 
-procedure TItTest.WhenCantCompareValuesMustReturnFalseInTheComparision;
+{ TItReferenceTest }
+
+procedure TItReferenceTest.IsAnyAllTests;
 begin
-  var ItValue := It;
-
-  ItValue.IsEqualTo<TClass>(nil);
-
-  Assert.IsFalse((ItValue as IIt).Compare(TValue.From<TClass>(nil)));
+  MakeTest<Integer>(icAny, ItReference<Integer>.IsAny, 0);
 end;
 
-procedure TItTest.WhenComparingArraysAndTheSizeOfBothIsDifferentMustReturnFalseInTheComparision;
+procedure TItReferenceTest.IsEqualToAllTests;
 begin
-  var ItValue := It;
-
-  ItValue.IsEqualTo<TArray<Integer>>([1, 2, 3]);
-
-  Assert.IsFalse((ItValue as IIt).Compare(TValue.From<TArray<Integer>>([1, 2])));
+  MakeTest<Integer>(icEqualTo, ItReference<Integer>.IsEqualTo(123), 123);
 end;
 
-procedure TItTest.WhenComparingValueMustReturnTrueIfTheValuesIsEqual(ValueKind: TTypeKind);
+procedure TItReferenceTest.IsNotEqualToAllTests;
 begin
-  var AnObject: TObject := nil;
-  var ItValue := It;
-  var Value: TValue;
-
-  case ValueKind of
-    tkEnumeration:
-    begin
-      Value := TValue.From(Enum2);
-
-      ItValue.IsEqualTo(Enum2);
-    end;
-    tkInteger:
-    begin
-      Value := 123;
-
-      ItValue.IsEqualTo(123);
-    end;
-    tkFloat:
-    begin
-      Value := 123.456;
-
-      ItValue.IsEqualTo(123.456);
-    end;
-    tkString:
-    begin
-      Value := 'abc';
-
-      ItValue.IsEqualTo('abc');
-    end;
-    tkVariant:
-    begin
-      Value := TValue.From(Variant(123456));
-
-      ItValue.IsEqualTo(Variant(123456));
-    end;
-    tkRecord:
-    begin
-      Value := TValue.From(TValue.From(123456789));
-
-      ItValue.IsEqualTo(TValue.From(123456789));
-    end;
-    tkClass:
-    begin
-      AnObject := TObject.Create;
-      Value := TValue.From(AnObject);
-
-      ItValue.IsEqualTo(AnObject);
-    end;
-  end;
-
-  Assert.IsTrue((ItValue as IIt).Compare(Value));
-
-  AnObject.Free;
+  MakeTest<Integer>(icNotEqualTo, ItReference<Integer>.IsNotEqualTo(123), 456);
 end;
 
-procedure TItTest.WhenComparinTValuesMustReturnTrueInTheComparisionIfBothIsEmpty;
+procedure TItReferenceTest.SameFieldsToAllTests;
 begin
-  var ItValue := It;
+  var CurrentValue := TMyClass.Create;
+  var ValueToCompare := TMyClass.Create;
 
-  ItValue.IsEqualTo(TValue.Empty);
+  CurrentValue.MyField := 'abc';
+  ValueToCompare.MyField := 'abc';
 
-  Assert.IsTrue((ItValue as IIt).Compare(TValue.From(TValue.Empty)));
+  MakeTest<TMyClass>(icSameFields, ItReference<TMyClass>.SameFields(CurrentValue), ValueToCompare);
+
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
 end;
 
-procedure TItTest.WhenConfigureTheIfParamToCompareTheSamePropertiesMustReturnTrueIfTheValueOfThePropertiesAreTheSame;
+procedure TItReferenceTest.SamePropertiesToAllTests;
 begin
-  var MyClass := TMyClass.Create;
-  MyClass.MyProperty := 'abc';
-  MyClass.MyProperty2 := 1234;
-  var ValueIt := It;
+  var CurrentValue := TMyClass.Create;
+  var ValueToCompare := TMyClass.Create;
 
-  ValueIt.SameProperties(MyClass);
+  CurrentValue.MyProperty := 'abc';
+  ValueToCompare.MyProperty := 'abc';
 
-  Assert.IsTrue((ValueIt as IIt).Compare(MyClass));
+  MakeTest<TMyClass>(icSameProperties, ItReference<TMyClass>.SameProperties(CurrentValue), ValueToCompare);
 
-  MyClass.Free;
+  CurrentValue.Free;
+
+  ValueToCompare.Free;
 end;
 
-procedure TItTest.WhenConfigureTheItParamToCompareTheSameFieldsMustReturnTrueIfTheValuesOfTheFieldsAreTheSame;
+procedure TItReferenceTest.SetupFixture;
 begin
-  var MyClass := TMyClass.Create;
-  MyClass.MyField := 'abc';
-  MyClass.MyField2 := 1234;
-  var ValueIt := It;
-
-  ValueIt.SameFields(MyClass);
-
-  Assert.IsTrue((ValueIt as IIt).Compare(MyClass));
-
-  MyClass.Free;
+  TRttiContext.Create.GetType(TMyClass).GetFields;
 end;
 
-procedure TItTest.WhenIsAnyIsCreateAlwaysReturnTrue;
+procedure TItReferenceTest.WhenUseTheParamIndexInTheItCallMustLoadTheParamIndexWithThatValue;
 begin
-  var ValueIt := It;
+  ItReference<Integer>(10);
 
-  ValueIt.IsAny<String>;
+  Assert.AreEqual(10, TItParams.ParamIndex);
 
-  Assert.IsTrue((ValueIt as IIt).Compare(EmptyStr));
+  TItParams.ParamIndex := -1;
 end;
 
-procedure TItTest.WhenPassTheParamIndexMustFillTheItParamsWithTheSizeExpected;
+procedure TItReferenceTest.MakeTest<T>(const Comparision: TItComparision; const ItParam: TItParam<T>; const ValueToCompare: T);
 begin
-  It(4).IsAny<String>;
+  Assert.IsNotNull(ItParam, 'Must create the object');
 
-  Assert.AreEqual(5, Length(GItParams));
-end;
+  Assert.AreEqual(1, TItParams.Params.Count, 'Don''t call the add param');
 
-procedure TItTest.WhenPassTheParamIndexMustKeepTheLenghtOfGlobalVarWithTheBiggestValueIndex;
-begin
-  It(4).IsAny<String>;
+  Assert.AreEqual(Comparision, ItParam.ItComparision, 'Not the same comparision');
 
-  It(1).IsAny<String>;
+  Assert.IsTrue((ItParam as IIt).Compare(TValue.From<T>(ValueToCompare)), 'The value comparision failed');
 
-  Assert.AreEqual(5, Length(GItParams));
-end;
-
-procedure TItTest.WhenTheArraysHasTheSameLengthMustComparaEveryValueInTheArray;
-begin
-  var ItValue := It;
-
-  ItValue.IsEqualTo<TArray<Integer>>([1, 2, 3]);
-
-  Assert.IsTrue((ItValue as IIt).Compare(TValue.From<TArray<Integer>>([1, 2, 3])));
-end;
-
-procedure TItTest.WhenTheTypeOfItValuesAreDifferentTheComparisionMustReturnFalse;
-begin
-  var ValueIt := It;
-
-  ValueIt.IsEqualTo(1234);
-
-  Assert.IsFalse((ValueIt as IIt).Compare('abcde'));
-end;
-
-procedure TItTest.WhenTheTypesAreEquivalentMustCompareTheValuesAsExpected(LeftValueKind, RightValueKind: TTypeKind);
-begin
-  var LeftValue := It;
-  var RightValue: TValue;
-
-  case LeftValueKind of
-    tkChar: LeftValue.IsEqualTo(AnsiChar('A'));
-    tkInt64: LeftValue.IsEqualTo(Int64(1));
-    tkInteger: LeftValue.IsEqualTo(1);
-    tkString, tkUString: LeftValue.IsEqualTo(String('A'));
-    tkWChar: LeftValue.IsEqualTo('A');
-  end;
-
-  case RightValueKind of
-    tkChar: RightValue := TValue.From(AnsiChar('A'));
-    tkInt64: RightValue := Int64(1);
-    tkInteger: RightValue := 1;
-    tkString, tkUString: RightValue := String('A');
-    tkWChar: RightValue := TValue.From('A');
-  end;
-
-  Assert.IsTrue((LeftValue as IIt).Compare(RightValue));
-end;
-
-procedure TItTest.WhenTryToCompareARecordDiferentOfTValueMustRaiseAnError;
-begin
-  Assert.WillRaise(
-    procedure
-    begin
-      var ItValue := It;
-
-      ItValue.IsEqualTo(TGUID.NewGuid);
-
-      (ItValue as IIt).Compare(TValue.From(TGUID.NewGuid));
-    end, EInvalidTypeForComparision);
+  TItParams.ResetParams;
 end;
 
 end.

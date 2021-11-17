@@ -2,12 +2,14 @@
 
 interface
 
-uses DUnitX.TestFramework, System.Rtti, System.SysUtils, Delphi.Mock.Method;
+uses DUnitX.TestFramework, System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Method;
 
 type
   [TestFixture]
   TMethodRegisterTest = class
   public
+    [SetupFixture]
+    procedure SetupFixture;
     [Test]
     procedure IfDontCallStartRegisterAndTryToRegisterAMethodMustRaiseAException;
     [Test]
@@ -105,9 +107,9 @@ type
 
 implementation
 
-uses Delphi.Mock;
-
 { TMethodRegisterTest }
+
+uses Delphi.Mock.It;
 
 procedure TMethodRegisterTest.AfterCallRegisterMethodMustResetTheControlOfRegistering;
 begin
@@ -219,6 +221,11 @@ begin
   Method.Free;
 end;
 
+procedure TMethodRegisterTest.SetupFixture;
+begin
+  TRttiContext.Create.GetType(TMyClass).GetMethods;
+end;
+
 procedure TMethodRegisterTest.TheExecutionCountExpectationIsNotEqualToExpectationMustReturnThenDiferencesOfCalls;
 begin
   var Method := TMethodInfoExpectExecutionCount.Create(5);
@@ -302,7 +309,7 @@ begin
 
   MethodRegister.RegisterMethod(Method);
 
-  Assert.AreEqual(2, Length(MethodRegister.ExpectMethods));
+  Assert.AreEqual<Integer>(2, Length(MethodRegister.ExpectMethods));
 
   MethodRegister.Free;
 
@@ -374,21 +381,21 @@ begin
   MethodRegister.StartRegister(MyMethod);
 
   It.IsEqualTo('abc');
-  It.IsEqualTo(1234);
+  It.IsEqualTo<Integer>(1234);
 
   MethodRegister.RegisterMethod(Method);
 
   MethodRegister.StartRegister(MyMethod);
 
   It.IsEqualTo('abc');
-  It.IsEqualTo(5555);
+  It.IsEqualTo<Integer>(5555);
 
   MethodRegister.RegisterMethod(Method);
 
   MethodRegister.StartRegister(MyMethodCorrect);
 
   It.IsEqualTo('abc');
-  It.IsEqualTo(789);
+  It.IsEqualTo<Integer>(789);
 
   MethodRegister.RegisterMethod(Method);
 
@@ -539,7 +546,7 @@ begin
   except
   end;
 
-  Assert.AreEqual(0, Length(GItParams));
+  Assert.AreEqual(0, TItParams.Params.Count);
 
   MethodRegister.Free;
 end;
@@ -728,10 +735,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TMethodRegisterTest);
-
-  // Avoiding memory leak register.
-  var Context := TRttiContext.Create;
-  Context.GetType(TMyClass).GetMethods;
 
 end.
 
