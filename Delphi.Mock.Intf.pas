@@ -12,9 +12,6 @@ type
 
   IMockSetup<T: IInterface> = interface
     ['{778531BB-4093-4103-B4BC-72845B78387B}']
-    function WillExecute(Func: TFunc<TValue>): IMockSetupWhen<T>; overload; deprecated 'Use the const version of this function';
-    function WillExecute(Func: TFunc<TArray<TValue>, TValue>): IMockSetupWhen<T>; overload; deprecated 'Use the const version of this function';
-    function WillExecute(Proc: TProc<TArray<TValue>>): IMockSetupWhen<T>; overload; deprecated 'Use the const version of this function';
     function WillExecute(const Func: TFunctionInvoke): IMockSetupWhen<T>; overload;
     function WillExecute(const Func: TFunctionInvokeParams): IMockSetupWhen<T>; overload;
     function WillExecute(const Proc: TProcedureInvoke): IMockSetupWhen<T>; overload;
@@ -60,9 +57,6 @@ type
     function ExecutionCount(const ExecutionCountExpected: Integer): IMockSetupWhen<T>;
     function Never: IMockSetupWhen<T>;
     function Once: IMockSetupWhen<T>;
-    function WillExecute(Func: TFunc<TValue>): IMockSetupWhen<T>; overload;
-    function WillExecute(Func: TFunc<TArray<TValue>, TValue>): IMockSetupWhen<T>; overload;
-    function WillExecute(Proc: TProc<TArray<TValue>>): IMockSetupWhen<T>; overload;
     function WillExecute(const Func: TFunctionInvoke): IMockSetupWhen<T>; overload;
     function WillExecute(const Func: TFunctionInvokeParams): IMockSetupWhen<T>; overload;
     function WillExecute(const Proc: TProcedureInvoke): IMockSetupWhen<T>; overload;
@@ -196,39 +190,6 @@ begin
   Result := FMockSetupWhen;
 
   FMethodRegister.StartRegister(TMethodInfoWillExecute.Create(Proc));
-end;
-
-function TMockSetupInterface<T>.WillExecute(Func: TFunc<TValue>): IMockSetupWhen<T>;
-begin
-  Result := FMockSetupWhen;
-
-  FMethodRegister.StartRegister(TMethodInfoWillExecute.Create(
-    procedure (const Params: TArray<TValue>; out Result: TValue)
-    begin
-      Result := Func;
-    end));
-end;
-
-function TMockSetupInterface<T>.WillExecute(Func: TFunc<TArray<TValue>, TValue>): IMockSetupWhen<T>;
-begin
-  Result := FMockSetupWhen;
-
-  FMethodRegister.StartRegister(TMethodInfoWillExecute.Create(
-     procedure (const Params: TArray<TValue>; out Result: TValue)
-    begin
-      Result := Func(Params);
-    end));
-end;
-
-function TMockSetupInterface<T>.WillExecute(Proc: TProc<TArray<TValue>>): IMockSetupWhen<T>;
-begin
-  Result := FMockSetupWhen;
-
-  FMethodRegister.StartRegister(TMethodInfoWillExecute.Create(
-     procedure (const Params: TArray<TValue>; out Result: TValue)
-    begin
-      Proc(Params);
-    end));
 end;
 
 function TMockSetupInterface<T>.WillReturn(const Value: TValue): IMockSetupWhen<T>;
