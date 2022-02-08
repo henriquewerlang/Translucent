@@ -62,7 +62,7 @@ type
     function Once: TMockSetupWhen<T>;
   end;
 
-  TMock<T: class> = class
+  TMockClass<T: class> = class
   private
     FMethodRegister: IMethodRegister;
     FMockSetup: TMockSetup<T>;
@@ -85,14 +85,14 @@ type
 
 implementation
 
-{ TMock<T> }
+{ TMockClass<T> }
 
-function TMock<T>.CheckExpectations: String;
+function TMockClass<T>.CheckExpectations: String;
 begin
   Result := Expect.CheckExpectations;
 end;
 
-constructor TMock<T>.Create(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean);
+constructor TMockClass<T>.Create(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean);
 begin
   inherited Create;
 
@@ -101,7 +101,7 @@ begin
   FMockExpectSetup := TMockExpectSetup<T>.Create(ConstructorArgs, FMethodRegister);
 end;
 
-destructor TMock<T>.Destroy;
+destructor TMockClass<T>.Destroy;
 begin
   FMockSetup.Free;
 
@@ -110,17 +110,17 @@ begin
   inherited;
 end;
 
-function TMock<T>.GetExcept: TMockExpectSetup<T>;
+function TMockClass<T>.GetExcept: TMockExpectSetup<T>;
 begin
   Result := FMockExpectSetup;
 end;
 
-function TMock<T>.GetInstance: T;
+function TMockClass<T>.GetInstance: T;
 begin
   Result := Setup.FProxy.FInstance;
 end;
 
-function TMock<T>.GetSetup: TMockSetup<T>;
+function TMockClass<T>.GetSetup: TMockSetup<T>;
 begin
   Result := FMockSetup;
 end;

@@ -6,7 +6,7 @@ uses DUnitX.TestFramework;
 
 type
   [TestFixture]
-  TMockTest = class
+  TMockClassTest = class
   public
     [Test]
     procedure WhenCreateAMockClassMustReturnAInstance;
@@ -46,11 +46,11 @@ implementation
 
 uses System.Rtti, System.SysUtils, Delphi.Mock, Delphi.Mock.Classes;
 
-{ TMockTest }
+{ TMockClassTest }
 
-procedure TMockTest.IfDontFindTheConstructorMustRaiseAnException;
+procedure TMockClassTest.IfDontFindTheConstructorMustRaiseAnException;
 begin
-  var Mock: TMock<TMyClass> := nil;
+  var Mock: TMockClass<TMyClass> := nil;
 
   Assert.WillRaise(
     procedure
@@ -61,7 +61,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenCreateAClassMustCallTheCorrectConstructor;
+procedure TMockClassTest.WhenCreateAClassMustCallTheCorrectConstructor;
 begin
   var Mock := TMock.CreateClass<TMyClass>(['Value']);
 
@@ -70,7 +70,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenCreateAMockClassMustReturnAInstance;
+procedure TMockClassTest.WhenCreateAMockClassMustReturnAInstance;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
@@ -79,7 +79,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
+procedure TMockClassTest.WhenMoreThenOneExpectationFailMustReturnMessageOfAllExpectations;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
@@ -92,7 +92,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenRegisterACustomExpectationMustCallThisExpectation;
+procedure TMockClassTest.WhenRegisterACustomExpectationMustCallThisExpectation;
 begin
   var Executed := False;
   var Mock := TMock.CreateClass<TMyClass>;
@@ -110,7 +110,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenRegisterAnExpectationMustReturnAEmptyStringIfTheExpectationIsConclued;
+procedure TMockClassTest.WhenRegisterAnExpectationMustReturnAEmptyStringIfTheExpectationIsConclued;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
@@ -123,7 +123,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
+procedure TMockClassTest.WhenRegisterAWillExecuteMustCallTheProcedureRegistred;
 begin
   var Executed := False;
   var Mock := TMock.CreateClass<TMyClass>;
@@ -141,7 +141,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenRegisterAWillReturnMustReturnTheValueRegistred;
+procedure TMockClassTest.WhenRegisterAWillReturnMustReturnTheValueRegistred;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
@@ -152,7 +152,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
+procedure TMockClassTest.WhenRegisterExpectationsAndNoOneIsCalledMustReturnAMessage;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 
@@ -163,7 +163,7 @@ begin
   Mock.Free;
 end;
 
-procedure TMockTest.WhenTheNeverExpectationIsExecutedMustReturnAMessageInExpectation;
+procedure TMockClassTest.WhenTheNeverExpectationIsExecutedMustReturnAMessageInExpectation;
 begin
   var Mock := TMock.CreateClass<TMyClass>;
 

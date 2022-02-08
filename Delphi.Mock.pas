@@ -7,7 +7,7 @@ uses System.Rtti, Delphi.Mock.Classes, Delphi.Mock.Intf, Delphi.Mock.It;
 type
   TMock = class
   public
-    class function CreateClass<T: class>(const ConstructorArgs: TArray<TValue> = nil; const AutoMock: Boolean = False): TMock<T>;
+    class function CreateClass<T: class>(const ConstructorArgs: TArray<TValue> = nil; const AutoMock: Boolean = False): TMockClass<T>;
     class function CreateInterface<T: IInterface>(const AutoMock: Boolean = False): IMock<T>;
   end;
 
@@ -37,9 +37,9 @@ implementation
 
 { TMock }
 
-class function TMock.CreateClass<T>(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean): TMock<T>;
+class function TMock.CreateClass<T>(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean): TMockClass<T>;
 begin
-  Result := TMock<T>.Create(ConstructorArgs, AutoMock);
+  Result := TMockClass<T>.Create(ConstructorArgs, AutoMock);
 end;
 
 class function TMock.CreateInterface<T>(const AutoMock: Boolean): IMock<T>;
