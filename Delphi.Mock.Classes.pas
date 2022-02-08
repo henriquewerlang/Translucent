@@ -10,7 +10,7 @@ type
     constructor Create;
   end;
 
-  TProxyClass<T: class> = class(TVirtualMethodInterceptor)
+  TClassInterceptor<T: class> = class(TVirtualMethodInterceptor)
   private
     FInstance: T;
 
@@ -24,7 +24,7 @@ type
   TMockSetupWhen<T: class> = class
   private
     FMethodRegister: IMethodRegister;
-    FProxy: TProxyClass<T>;
+    FClassInterceptor: TClassInterceptor<T>;
 
     procedure OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
   public
@@ -39,7 +39,7 @@ type
   private
     FMockSetupWhen: TMockSetupWhen<T>;
     FMethodRegister: IMethodRegister;
-    FProxy: TProxyClass<T>;
+    FClassInterceptor: TClassInterceptor<T>;
 
     procedure OnInvoke(Instance: TObject; Method: TRttiMethod; const Args: TArray<TValue>; out DoInvoke: Boolean; out Result: TValue);
   public
@@ -69,8 +69,6 @@ type
     FMockExpectSetup: TMockExpectSetup<T>;
 
     function GetInstance: T;
-    function GetExcept: TMockExpectSetup<T>;
-    function GetSetup: TMockSetup<T>;
   public
     constructor Create(const ConstructorArgs: TArray<TValue>; const AutoMock: Boolean);
 
@@ -78,9 +76,9 @@ type
 
     function CheckExpectations: String;
 
-    property Expect: TMockExpectSetup<T> read GetExcept;
+    property Expect: TMockExpectSetup<T> read FMockExpectSetup;
     property Instance: T read GetInstance;
-    property Setup: TMockSetup<T> read GetSetup;
+    property Setup: TMockSetup<T> read FMockSetup;
   end;
 
 implementation
@@ -110,19 +108,9 @@ begin
   inherited;
 end;
 
-function TMockClass<T>.GetExcept: TMockExpectSetup<T>;
-begin
-  Result := FMockExpectSetup;
-end;
-
 function TMockClass<T>.GetInstance: T;
 begin
-  Result := Setup.FProxy.FInstance;
-end;
-
-function TMockClass<T>.GetSetup: TMockSetup<T>;
-begin
-  Result := FMockSetup;
+  Result := FMockSetup.FClassInterceptor.FInstance;
 end;
 
 { TMockSetup<T> }
@@ -176,13 +164,13 @@ begin
   inherited Create;
 
   FMethodRegister := MethodRegister;
-  FProxy := TProxyClass<T>.Create(ConstructorArgs);
-  FProxy.OnBefore := OnInvoke;
+  FClassInterceptor := TClassInterceptor<T>.Create(ConstructorArgs);
+  FClassInterceptor.OnBefore := OnInvoke;
 end;
 
 destructor TMockSetupWhen<T>.Destroy;
 begin
-  FProxy.Free;
+  FClassInterceptor.Free;
 
   inherited;
 end;
@@ -196,23 +184,22 @@ end;
 
 function TMockSetupWhen<T>.When: T;
 begin
-  Result := FProxy.FInstance;
+  Result := FClassInterceptor.FInstance;
 end;
 
-{ TProxyClass<T> }
+{ TClassInterceptor<T> }
 
-constructor TProxyClass<T>.Create(const ConstructorArgs: TArray<TValue>);
+constructor TClassInterceptor<T>.Create(const ConstructorArgs: TArray<TValue>);
 begin
   inherited Create(T);
 
   var ConstructorMethod := FindMethodConstructor(ConstructorArgs);
-  var Context := TRttiContext.Create;
   FInstance := ConstructorMethod.Invoke(T, ConstructorArgs).AsObject as T;
 
   Proxify(FInstance);
 end;
 
-destructor TProxyClass<T>.Destroy;
+destructor TClassInterceptor<T>.Destroy;
 begin
   if Assigned(FInstance) then
     Unproxify(FInstance);
@@ -222,7 +209,7 @@ begin
   inherited;
 end;
 
-function TProxyClass<T>.FindMethodConstructor(const ConstructorArgs: TArray<TValue>): TRttiMethod;
+function TClassInterceptor<T>.FindMethodConstructor(const ConstructorArgs: TArray<TValue>): TRttiMethod;
 begin
   var Context := TRttiContext.Create;
 
@@ -261,15 +248,15 @@ begin
 
   FMethodRegister := MethodRegister;
   FMockSetupWhen := TMockSetupWhen<T>.Create(ConstructorArgs, FMethodRegister);
-  FProxy := TProxyClass<T>.Create(ConstructorArgs);
-  FProxy.OnBefore := OnInvoke;
+  FClassInterceptor := TClassInterceptor<T>.Create(ConstructorArgs);
+  FClassInterceptor.OnBefore := OnInvoke;
 end;
 
 destructor TMockSetupCommon<T>.Destroy;
 begin
   FMockSetupWhen.Free;
 
-  FProxy.Free;
+  FClassInterceptor.Free;
 
   inherited;
 end;

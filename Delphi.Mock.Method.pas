@@ -12,7 +12,7 @@ type
 
   EDidNotCallTheStartRegister = class(Exception)
   public
-    constructor Create;
+    constructor Create(Method: TRttiMethod);
   end;
 
   EMethodNotRegistered = class(Exception)
@@ -382,7 +382,7 @@ procedure TMethodRegister.RegisterMethod(Method: TRttiMethod);
 begin
   try
     if not Assigned(FMethodRegistering) then
-      raise EDidNotCallTheStartRegister.Create;
+      raise EDidNotCallTheStartRegister.Create(Method);
 
     if not (Method.DispatchKind in [dkVtable, dkDynamic, dkInterface]) then
       raise ENonVirtualMethod.Create(Method);
@@ -411,9 +411,9 @@ end;
 
 { EDidNotCallTheStartRegister }
 
-constructor EDidNotCallTheStartRegister.Create;
+constructor EDidNotCallTheStartRegister.Create(Method: TRttiMethod);
 begin
-  inherited Create('You must call StartRegister before call RegisterMethod');
+  inherited CreateFmt('You must call StartRegister before call RegisterMethod for the method %s', [Method.Name]);
 end;
 
 { TMethodInfo }

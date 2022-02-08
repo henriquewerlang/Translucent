@@ -8,6 +8,8 @@ type
   [TestFixture]
   TMockClassTest = class
   public
+    [SetupFixture]
+    procedure SetupFixture;
     [Test]
     procedure WhenCreateAMockClassMustReturnAInstance;
     [Test]
@@ -59,6 +61,12 @@ begin
     end, EConstructorNotFound);
 
   Mock.Free;
+end;
+
+procedure TMockClassTest.SetupFixture;
+begin
+  // Avoid memory leak in tests.
+  TMock.CreateClass<TMyClass>.Free;
 end;
 
 procedure TMockClassTest.WhenCreateAClassMustCallTheCorrectConstructor;
@@ -198,8 +206,5 @@ begin
   Result := 0;
 end;
 
-initialization
-  // Avoid memory leak in tests.
-  TMock.CreateClass<TMyClass>.Free;
-
 end.
+

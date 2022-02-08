@@ -15,8 +15,6 @@ uses
   DUnitX.TestFramework,
   DUnitX.MemoryLeakMonitor.FastMM5,
   Delphi.Mock in '..\Delphi.Mock.pas',
-  Delphi.Mock.VirtualInterface in '..\Delphi.Mock.VirtualInterface.pas',
-  Delphi.Mock.VirtualInterface.Test in 'Delphi.Mock.VirtualInterface.Test.pas',
   Delphi.Mock.Method in '..\Delphi.Mock.Method.pas',
   Delphi.Mock.It.Test in 'Delphi.Mock.It.Test.pas',
   Delphi.Mock.Classes in '..\Delphi.Mock.Classes.pas',

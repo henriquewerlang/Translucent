@@ -2,9 +2,12 @@
 
 interface
 
-uses System.SysUtils, System.Rtti, Delphi.Mock.VirtualInterface, Delphi.Mock.Method;
+uses System.SysUtils, System.Rtti, System.TypInfo, Delphi.Mock.Method;
 
 type
+  EInterfaceWithoutGUID = class(Exception);
+  EInterfaceWithoutMethodInfo = class(Exception);
+
   IMockSetupWhen<T: IInterface> = interface
     ['{1EE67E5A-C054-4771-842F-3FBCD39BB90B}']
     function When: T;
@@ -36,7 +39,12 @@ type
     function Setup: IMockSetup<T>;
   end;
 
-  TMockSetupWhenInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetupWhen<T>)
+  TInterfaceInterceptor = class(TVirtualInterface)
+  public
+    constructor Create(PIID: PTypeInfo; InvokeEvent: TVirtualInterfaceInvokeEvent);
+  end;
+
+  TMockSetupWhenInterface<T: IInterface> = class(TInterfaceInterceptor, IMockSetupWhen<T>)
   private
     FMethodRegister: IMethodRegister;
 
@@ -47,7 +55,7 @@ type
     constructor Create(MethodRegister: IMethodRegister);
   end;
 
-  TMockSetupInterface<T: IInterface> = class(TVirtualInterfaceEx, IMockSetup<T>, IMockExpectSetup<T>)
+  TMockSetupInterface<T: IInterface> = class(TInterfaceInterceptor, IMockSetup<T>, IMockExpectSetup<T>)
   private
     FMockSetupWhen: IMockSetupWhen<T>;
     FMethodRegister: IMethodRegister;
@@ -82,8 +90,6 @@ type
   end;
 
 implementation
-
-uses System.TypInfo;
 
 { TMockInterface<T> }
 
@@ -216,6 +222,21 @@ end;
 function TMockSetupWhenInterface<T>.When: T;
 begin
   QueryInterface(PTypeInfo(TypeInfo(T)).TypeData.GUID, Result);
+end;
+
+{ TInterfaceInterceptor }
+
+constructor TInterfaceInterceptor.Create(PIID: PTypeInfo; InvokeEvent: TVirtualInterfaceInvokeEvent);
+begin
+  var Context := TRttiContext.Create;
+  var InterfaceType := Context.GetType(PIID) as TRttiInterfaceType;
+
+  if not (ifHasGuid in InterfaceType.IntfFlags) then
+    raise EInterfaceWithoutGUID.Create('Interface without a GUID, please check interface declaration!')
+  else if Length(InterfaceType.GetMethods) = 0 then
+    raise EInterfaceWithoutMethodInfo.Create('You have to enable "Emit runtime type information" or put a {$M+} in the unit of inteface!');
+
+  inherited;
 end;
 
 end.
