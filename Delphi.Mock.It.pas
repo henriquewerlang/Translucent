@@ -58,7 +58,7 @@ type
 
 implementation
 
-uses System.Math;
+uses System.Math, System.TypInfo;
 
 const
   PARAM_INDEX_AT_THE_END = -1;
