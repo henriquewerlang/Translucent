@@ -34,23 +34,6 @@ type
     procedure WhenRegisterAWillExecuteMustCallTheFunctionRegistredWithParams;
   end;
 
-  [TestFixture]
-  TInterfaceInterceptorTest = class
-  public
-    [Test]
-    procedure WhenTheInterfaceDontHaveAGUIDWillRaiseAException;
-    [Test]
-    procedure IfTheInterfaceDontHaveMethodInfoActiveWillRaiseAException;
-  end;
-
-  IInterfaceWithoutGUI = interface
-  end;
-
-  IInterfaceWithoutMethodInfo = interface
-    ['{A514CB4D-326C-4266-BF8C-29DBBBDA08E0}']
-    procedure Method;
-  end;
-
 {$M+}
   IMyInterface = interface
     ['{A2194515-8E18-4EAC-A434-3944B6781D3A}']
@@ -200,26 +183,6 @@ begin
   Mock.Expect.Never.When.Execute;
 
   Assert.AreEqual(EmptyStr, Mock.CheckExpectations);
-end;
-
-{ TInterfaceInterceptorTest }
-
-procedure TInterfaceInterceptorTest.IfTheInterfaceDontHaveMethodInfoActiveWillRaiseAException;
-begin
-  Assert.WillRaise(
-    procedure
-    begin
-      TInterfaceInterceptor.Create(TypeInfo(IInterfaceWithoutMethodInfo), nil);
-    end, EInterfaceWithoutMethodInfo);
-end;
-
-procedure TInterfaceInterceptorTest.WhenTheInterfaceDontHaveAGUIDWillRaiseAException;
-begin
-  Assert.WillRaise(
-    procedure
-    begin
-      TInterfaceInterceptor.Create(TypeInfo(IInterfaceWithoutGUI), nil);
-    end, EInterfaceWithoutGUID);
 end;
 
 end.
