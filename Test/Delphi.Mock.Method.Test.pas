@@ -137,7 +137,9 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      MethodRegister.RegisterMethod(nil);
+      var Context := TRttiContext.Create;
+
+      MethodRegister.RegisterMethod(Context.GetType(TMyClass).GetMethods[0]);
     end, EDidNotCallTheStartRegister);
 
   MethodRegister.Free;
