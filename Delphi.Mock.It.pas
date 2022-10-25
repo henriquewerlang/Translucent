@@ -200,7 +200,7 @@ end;
 function TItParam<T>.SameTypes(const CurrentValue, ValueToCompare: TValue): Boolean;
 begin
   case CurrentValue.Kind of
-    tkClass: Result := ValueToCompare.TypeInfo.TypeData.ClassType.InheritsFrom(CurrentValue.TypeInfo.TypeData.ClassType);
+    tkClass: Result := ValueToCompare.IsEmpty or ValueToCompare.AsObject.ClassType.InheritsFrom(CurrentValue.TypeInfo.TypeData.ClassType);
     tkRecord: Result := CurrentValue.TypeInfo = ValueToCompare.TypeInfo;
     else Result := CurrentValue.Kind = ValueToCompare.Kind;
   end;
