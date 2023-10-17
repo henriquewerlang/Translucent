@@ -183,11 +183,12 @@ end;
 function TItParam<T>.CompareValues(const CurrentValue, ValueToCompare: TValue): Boolean;
 begin
   case FItComparision of
-    icAny: Exit(SameTypes(CurrentValue, ValueToCompare));
-    icEqualTo: Exit(CompareEqualValue(CurrentValue, ValueToCompare));
-    icNotEqualTo: Exit(not CompareEqualValue(CurrentValue, ValueToCompare));
-    icSameProperties: Exit(CompareProperties(CurrentValue, ValueToCompare));
-    icSameFields: Exit(CompareFields(CurrentValue, ValueToCompare));
+    icAny: Result := SameTypes(CurrentValue, ValueToCompare);
+    icEqualTo: Result := CompareEqualValue(CurrentValue, ValueToCompare);
+    icNotEqualTo: Result := not CompareEqualValue(CurrentValue, ValueToCompare);
+    icSameProperties: Result := CompareProperties(CurrentValue, ValueToCompare);
+    icSameFields: Result := CompareFields(CurrentValue, ValueToCompare);
+    else Result := False;
   end;
 end;
 

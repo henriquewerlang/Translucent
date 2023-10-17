@@ -83,6 +83,8 @@ type
 
 implementation
 
+uses System.TypInfo;
+
 { TMockClass<T> }
 
 function TMockClass<T>.CheckExpectations: String;
