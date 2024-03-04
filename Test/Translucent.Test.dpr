@@ -3,11 +3,9 @@ program Translucent.Test;
 {$STRONGLINKTYPES ON}
 
 uses
-  FastMM5,
   System.SysUtils,
   TestInsight.DUnitX,
   DUnitX.TestFramework,
-  DUnitX.MemoryLeakMonitor.FastMM5,
   Translucent in '..\Translucent.pas',
   Translucent.Method in '..\Translucent.Method.pas',
   Translucent.It.Test in 'Translucent.It.Test.pas',
@@ -19,11 +17,6 @@ uses
   Translucent.It in '..\Translucent.It.pas';
 
 begin
-  FastMM_OutputDebugStringEvents := [];
-  FastMM_LogToFileEvents := [mmetUnexpectedMemoryLeakSummary];
-  FastMM_MessageBoxEvents := [mmetDebugBlockDoubleFree, mmetDebugBlockReallocOfFreedBlock, mmetVirtualMethodCallOnFreedObject];
-  FastMM_DeleteEventLogFile;
-
   TestInsight.DUnitX.RunRegisteredTests;
 end.
 
